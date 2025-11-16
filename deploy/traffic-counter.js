@@ -197,7 +197,7 @@ function recordVisit() {
 
 // Sync visit to server (JSONBin.io for GitHub Pages)
 async function syncVisitToServer(visitorId) {
-  if (!USE_JSONBIN || !TRAFFIC_API_URL) {
+  if (!USE_JSONBIN || !TRAFFIC_API_URL || !TRAFFIC_API_KEY) {
     console.debug('Traffic API: Disabled (using localStorage only)');
     return;
   }
