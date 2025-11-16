@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CyberKit – Free Cybersecurity Tools</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="CyberKit is a free collection of browser-based cybersecurity tools: password generator, hashes, encoders, IP tools, JWT decoder, ciphers and more."
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Matrix background -->
+  <canvas id="matrix-bg"></canvas>
+
+  <div class="page">
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo-wrap">
+        <!-- Make sure this file exists (same folder as index.html) -->
+        <img src="assets/images/cyberkit-logo.png" alt="CyberKit logo" class="logo-img" />
+      </div>
+      <nav class="nav-links">
+        <a href="#tools">Tools</a>
+        <a href="#about">About</a>
+        <a href="#security">Security</a>
+      </nav>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero-left">
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            <span>Private by design – all processing in your browser</span>
+          </div>
+          <h1 class="hero-title">
+            Free cybersecurity tools that never leave your browser.
+          </h1>
+          <p class="hero-sub">
+            Generate strong passwords, hashes, encodings and inspect tokens without
+            sending any data to a server. CyberKit is your lightweight, always-on
+            cyber toolbox.
+          </p>
+        </div>
+
+        <div class="hero-pill" id="security">
+          <div class="hero-pill-title">Security note</div>
+          <div class="hero-pill-list">
+            <ul>
+              <li>All tools are <strong>client-side only</strong>.</li>
+              <li>IP lookup uses a public API (<code>ipwho.is</code>) – optional.</li>
+              <li>For learning &amp; defensive use – <strong>not for crime</strong>.</li>
+              <li>JWT tool does <strong>not</strong> verify signatures, only decodes.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- TOOLS -->
+      <section id="tools" aria-label="Cybersecurity tools">
+        <h2 id="tools-title">Tools</h2>
+        <p id="tools-sub">
+          All tools run locally in your browser. Optional IP lookups use third-party APIs.
+        </p>
+
+        <div class="tool-grid">
+          <!-- Strong Password Generator -->
+          <article class="tool-card" id="password-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">Strong Password Generator</h3>
+              <span class="tool-tag">Generator</span>
+            </div>
+            <p class="tool-desc">
+              Create a random password with custom length and character sets.
+              Great for accounts, Wi-Fi and vaults.
+            </p>
+            <div class="tool-body">
+              <div class="slider-row">
+                <label for="pw-length">Length</label>
+                <input type="range" id="pw-length" min="8" max="64" value="16" />
+                <span id="pw-length-value">16</span>
+              </div>
+              <div class="checkbox-row">
+                <label><input type="checkbox" id="pw-lower" checked /> a–z</label>
+                <label><input type="checkbox" id="pw-upper" checked /> A–Z</label>
+                <label><input type="checkbox" id="pw-digits" checked /> 0–9</label>
+                <label><input type="checkbox" id="pw-symbols" checked /> !@#$…</label>
+              </div>
+              <div>
+                <label for="pw-output">Generated password</label>
+                <input type="text" id="pw-output" readonly />
+              </div>
+              <div class="tool-actions">
+                <button id="pw-generate-btn">Generate</button>
+                <button type="button" class="secondary" id="pw-copy-btn">
+                  Copy
+                </button>
+              </div>
+              <div class="tool-output" id="pw-strength-msg"></div>
+            </div>
+          </article>
+
+          <!-- Base64 Encode / Decode -->
+          <article class="tool-card" id="base64-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">Base64 Encode / Decode</h3>
+              <span class="tool-tag">Encoder</span>
+            </div>
+            <p class="tool-desc">
+              Convert text to and from Base64. Useful for simple data encoding,
+              headers and lab work.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="b64-input">Input text</label>
+                <textarea id="b64-input" placeholder="Enter text here…"></textarea>
+              </div>
+              <div class="tool-actions">
+                <button id="b64-encode-btn">Encode →</button>
+                <button type="button" class="secondary" id="b64-decode-btn">
+                  ← Decode
+                </button>
+              </div>
+              <div>
+                <label for="b64-output">Output</label>
+                <textarea id="b64-output" readonly></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="secondary" id="b64-copy-btn">
+                  Copy output
+                </button>
+              </div>
+              <div class="tool-output" id="b64-msg"></div>
+            </div>
+          </article>
+
+          <!-- URL-safe Base64 -->
+          <article class="tool-card" id="b64url-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">URL-safe Base64</h3>
+              <span class="tool-tag">Encoder</span>
+            </div>
+            <p class="tool-desc">
+              Encode or decode text using URL-safe Base64 (Base64URL). Useful for
+              JWT, tokens and URLs.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="b64u-input">Input text</label>
+                <textarea id="b64u-input" placeholder="Enter text here…"></textarea>
+              </div>
+              <div class="tool-actions">
+                <button id="b64u-encode-btn">Encode →</button>
+                <button type="button" class="secondary" id="b64u-decode-btn">
+                  ← Decode
+                </button>
+              </div>
+              <div>
+                <label for="b64u-output">Output</label>
+                <textarea id="b64u-output" readonly></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="secondary" id="b64u-copy-btn">
+                  Copy output
+                </button>
+              </div>
+              <div class="tool-output" id="b64u-msg"></div>
+            </div>
+          </article>
+
+          <!-- Base32 -->
+          <article class="tool-card" id="base32-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">Base32 Encode / Decode</h3>
+              <span class="tool-tag">Encoder</span>
+            </div>
+            <p class="tool-desc">
+              Convert text to and from RFC&nbsp;4648 Base32. Handy for TOTP secrets
+              and some protocols.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="b32-input">Input text</label>
+                <textarea
+                  id="b32-input"
+                  placeholder="Text to encode, or Base32 string to decode…"
+                ></textarea>
+              </div>
+              <div class="tool-actions">
+                <button id="b32-encode-btn">Encode →</button>
+                <button type="button" class="secondary" id="b32-decode-btn">
+                  ← Decode
+                </button>
+              </div>
+              <div>
+                <label for="b32-output">Output</label>
+                <textarea id="b32-output" readonly></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="secondary" id="b32-copy-btn">
+                  Copy output
+                </button>
+              </div>
+              <div class="tool-output" id="b32-msg"></div>
+            </div>
+          </article>
+
+          <!-- SHA-256 Hash Generator -->
+          <article class="tool-card" id="sha256-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">SHA-256 Hash Generator</h3>
+              <span class="tool-tag">Hash</span>
+            </div>
+            <p class="tool-desc">
+              Calculate the SHA-256 hash of any text using the browser crypto API.
+              Good for integrity checks and labs.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="sha-input">Input text</label>
+                <textarea id="sha-input" placeholder="Enter text to hash…"></textarea>
+              </div>
+              <div class="tool-actions">
+                <button id="sha-generate-btn">Generate hash</button>
+              </div>
+              <div>
+                <label for="sha-output">SHA-256 (hex)</label>
+                <textarea id="sha-output" readonly></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="secondary" id="sha-copy-btn">
+                  Copy hash
+                </button>
+              </div>
+              <div class="tool-output" id="sha-msg"></div>
+            </div>
+          </article>
+
+          <!-- Hex ⇄ Text -->
+          <article class="tool-card" id="hex-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">Hex ⇄ Text Converter</h3>
+              <span class="tool-tag">Converter</span>
+            </div>
+            <p class="tool-desc">
+              Convert between hex bytes (e.g. <code>48 65 6c 6c 6f</code>) and plain
+              text. Handy for payloads and logs.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="hex-input">Hex input / Text</label>
+                <textarea
+                  id="hex-input"
+                  placeholder="Hex (for Hex → Text) or text (for Text → Hex)…"
+                ></textarea>
+              </div>
+              <div class="tool-actions">
+                <button id="hex-to-text-btn">Hex → Text</button>
+                <button type="button" class="secondary" id="text-to-hex-btn">
+                  Text → Hex
+                </button>
+              </div>
+              <div>
+                <label for="hex-output">Output</label>
+                <textarea id="hex-output" readonly></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="secondary" id="hex-copy-btn">
+                  Copy output
+                </button>
+              </div>
+              <div class="tool-output" id="hex-msg"></div>
+            </div>
+          </article>
+
+          <!-- URL Encode / Decode -->
+          <article class="tool-card" id="url-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">URL Encode / Decode</h3>
+              <span class="tool-tag">Encoder</span>
+            </div>
+            <p class="tool-desc">
+              Safely encode or decode URL parameters. Useful for debugging
+              requests, redirects and web apps.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="url-input">Input</label>
+                <textarea
+                  id="url-input"
+                  placeholder="Text or URL to encode/decode…"
+                ></textarea>
+              </div>
+              <div class="tool-actions">
+                <button id="url-encode-btn">Encode →</button>
+                <button type="button" class="secondary" id="url-decode-btn">
+                  ← Decode
+                </button>
+              </div>
+              <div>
+                <label for="url-output">Output</label>
+                <textarea id="url-output" readonly></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="secondary" id="url-copy-btn">
+                  Copy output
+                </button>
+              </div>
+              <div class="tool-output" id="url-msg"></div>
+            </div>
+          </article>
+
+          <!-- Client Info / IP Viewer -->
+          <article class="tool-card" id="clientinfo-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">Client Info / IP Viewer</h3>
+              <span class="tool-tag">Inspector</span>
+            </div>
+            <p class="tool-desc">
+              See basic information about your browser, OS, screen and public IP.
+              Everything is read directly from your client.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label>Public IP (via ipify.org)</label>
+                <input
+                  type="text"
+                  id="client-ip"
+                  readonly
+                  placeholder="Click Refresh to query public IP…"
+                />
+              </div>
+              <div>
+                <label>User agent</label>
+                <textarea id="client-ua" readonly></textarea>
+              </div>
+              <div>
+                <label>Platform</label>
+                <input type="text" id="client-platform" readonly />
+              </div>
+              <div>
+                <label>Timezone &amp; language</label>
+                <input type="text" id="client-tz-lang" readonly />
+              </div>
+              <div>
+                <label>Screen</label>
+                <input type="text" id="client-screen" readonly />
+              </div>
+              <div class="tool-actions">
+                <button type="button" id="client-refresh-btn">Refresh info</button>
+              </div>
+              <div class="tool-output" id="clientinfo-msg"></div>
+            </div>
+          </article>
+
+          <!-- IP Lookup Tool -->
+          <article class="tool-card" id="iplookup-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">IP Lookup Tool</h3>
+              <span class="tool-tag">Lookup</span>
+            </div>
+            <p class="tool-desc">
+              Get approximate geo / ISP info for an IP or domain using the public
+              ipwho.is API. Data is not 100% accurate.
+            </p>
+            <div class="tool-body">
+              <div class="checkbox-row">
+                <label>
+                  <input type="checkbox" id="ip-lookup-toggle" />
+                  I understand this sends the IP/domain to ipwho.is
+                </label>
+              </div>
+              <div>
+                <label for="ip-lookup-input">Lookup IP or domain</label>
+                <input
+                  type="text"
+                  id="ip-lookup-input"
+                  placeholder="8.8.8.8 or example.com"
+                />
+              </div>
+              <div class="tool-actions">
+                <button type="button" id="ip-lookup-btn">Lookup</button>
+              </div>
+              <div>
+                <label for="ip-lookup-output">Lookup result (approximate)</label>
+                <textarea id="ip-lookup-output" readonly></textarea>
+              </div>
+              <div class="tool-output" id="iplookup-msg"></div>
+            </div>
+          </article>
+
+          <!-- Unix Timestamp Converter -->
+          <article class="tool-card" id="time-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">Unix Timestamp Converter</h3>
+              <span class="tool-tag">Time</span>
+            </div>
+            <p class="tool-desc">
+              Convert between Unix timestamps (seconds) and ISO date/time. Great
+              for log analysis and JWT claims.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="ts-input">Timestamp (seconds or ms)</label>
+                <input
+                  type="text"
+                  id="ts-input"
+                  placeholder="e.g. 1700000000 or 1700000000000"
+                />
+              </div>
+              <div class="tool-actions">
+                <button type="button" id="ts-to-date-btn">Timestamp → Date</button>
+              </div>
+              <div>
+                <label for="date-input">ISO date/time (local → UTC)</label>
+                <input
+                  type="text"
+                  id="date-input"
+                  placeholder="Leave empty and click Date → Timestamp for now"
+                />
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="secondary" id="date-to-ts-btn">
+                  Date → Timestamp
+                </button>
+              </div>
+              <div class="tool-output" id="time-msg"></div>
+            </div>
+          </article>
+
+          <!-- ROT13 / Caesar Cipher -->
+          <article class="tool-card" id="cipher-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">ROT13 / Caesar Cipher</h3>
+              <span class="tool-tag">Cipher</span>
+            </div>
+            <p class="tool-desc">
+              Apply ROT13 or a generic Caesar shift to text. Letters rotate, other
+              characters stay as-is.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="cipher-input">Input text</label>
+                <textarea
+                  id="cipher-input"
+                  placeholder="Enter plaintext or ciphertext…"
+                ></textarea>
+              </div>
+              <div class="slider-row">
+                <label for="cipher-shift">Shift</label>
+                <input type="range" id="cipher-shift" min="0" max="25" value="13" />
+                <span id="cipher-shift-value">13</span>
+              </div>
+              <div class="tool-actions">
+                <button id="cipher-rot13-btn">ROT13</button>
+                <button type="button" class="secondary" id="cipher-encode-btn">
+                  Encode (shift →)
+                </button>
+                <button type="button" class="secondary" id="cipher-decode-btn">
+                  Decode (shift ←)
+                </button>
+              </div>
+              <div>
+                <label for="cipher-output">Output</label>
+                <textarea id="cipher-output" readonly></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" class="secondary" id="cipher-copy-btn">
+                  Copy output
+                </button>
+              </div>
+              <div class="tool-output" id="cipher-msg"></div>
+            </div>
+          </article>
+
+          <!-- JWT Decoder -->
+          <article class="tool-card" id="jwt-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">JWT Header / Payload Decoder</h3>
+              <span class="tool-tag">JWT</span>
+            </div>
+            <p class="tool-desc">
+              Decode the header and payload of a JSON Web Token (JWT) using
+              Base64URL. Does <strong>not</strong> verify signatures.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="jwt-input">JWT token</label>
+                <textarea
+                  id="jwt-input"
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.…"
+                ></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" id="jwt-decode-btn">Decode JWT</button>
+              </div>
+              <div>
+                <label for="jwt-header-output">Header (JSON)</label>
+                <textarea id="jwt-header-output" readonly></textarea>
+              </div>
+              <div>
+                <label for="jwt-payload-output">Payload (JSON)</label>
+                <textarea id="jwt-payload-output" readonly></textarea>
+              </div>
+              <div class="tool-output" id="jwt-msg"></div>
+            </div>
+          </article>
+
+          <!-- Random Token / API Key Generator -->
+          <article class="tool-card" id="token-tool">
+            <div class="tool-header">
+              <h3 class="tool-title">Random Token / API Key Generator</h3>
+              <span class="tool-tag">Generator</span>
+            </div>
+            <p class="tool-desc">
+              Generate random tokens suitable for API keys, secrets or identifiers
+              using the browser crypto API.
+            </p>
+            <div class="tool-body">
+              <div>
+                <label for="token-type-select">Token type</label>
+                <select id="token-type-select">
+                  <option value="hex">Hex (2× length characters)</option>
+                  <option value="base64url">Base64URL (JWT-like)</option>
+                  <option value="alphanum">Alphanumeric (A–Z, a–z, 0–9)</option>
+                </select>
+              </div>
+              <div class="slider-row">
+                <label for="token-length">Length (bytes / chars)</label>
+                <input type="range" id="token-length" min="8" max="64" value="32" />
+                <span id="token-length-value">32</span>
+              </div>
+              <div>
+                <label for="token-output">Generated token</label>
+                <textarea id="token-output" readonly></textarea>
+              </div>
+              <div class="tool-actions">
+                <button type="button" id="token-generate-btn">
+                  Generate token
+                </button>
+                <button type="button" class="secondary" id="token-copy-btn">
+                  Copy token
+                </button>
+              </div>
+              <div class="tool-output" id="token-msg"></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section id="about" class="about-section">
+        <h2>About CyberKit</h2>
+        <p>
+          CyberKit is a free, browser-based toolbox for students, blue-teamers and
+          curious learners. No login, no tracking, and the core tools run entirely
+          on your machine.
+        </p>
+        <p>
+          You can customize this text later with your own story, links, and
+          disclaimers.
+        </p>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+      <span>© <span id="year"></span> CyberKit. All tools are client-side only.</span>
+      <div class="links">
+        <a href="#about">About</a>
+        <a href="#security">Security note</a>
+        <a
+          href="#"
+          onclick="alert('Add a proper legal disclaimer page later.'); return false;"
+        >Disclaimer</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
