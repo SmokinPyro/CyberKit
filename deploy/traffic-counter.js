@@ -9,9 +9,9 @@
 // For PHP server: use './traffic-api.php'
 // For GitHub Pages: use JSONBin.io free API for global stats
 // Get your free API key from https://jsonbin.io and replace YOUR_API_KEY below
-const TRAFFIC_API_URL = 'https://api.jsonbin.io/v3/b/676a1238e41b4d34e43b3c4a'; // JSONBin.io bin ID
-const TRAFFIC_API_KEY = '$2a$10$YOUR_API_KEY_HERE'; // Replace with your JSONBin.io API key
-const USE_JSONBIN = true; // Set to false to use localStorage only
+const TRAFFIC_API_URL = null; // Set to 'https://api.jsonbin.io/v3/b/YOUR_BIN_ID' for global stats
+const TRAFFIC_API_KEY = null; // Set to your JSONBin.io API key (starts with '$2a$10$')
+const USE_JSONBIN = false; // Set to true and configure above for global stats
 
 // Traffic counter data structure
 let trafficData = {
@@ -189,8 +189,8 @@ function recordVisit() {
   
   saveTrafficData();
   
-  // Sync with server (if API URL is set)
-  if (TRAFFIC_API_URL) {
+  // Sync with server (if JSONBin.io is configured)
+  if (USE_JSONBIN && TRAFFIC_API_URL && TRAFFIC_API_KEY) {
     syncVisitToServer(visitorId);
   }
 }
@@ -307,8 +307,8 @@ function trackToolUsage() {
       saveTrafficData();
       updateTrafficWidget();
       
-      // Sync tool usage to server (if API URL is set)
-      if (TRAFFIC_API_URL) {
+      // Sync tool usage to server (if JSONBin.io is configured)
+      if (USE_JSONBIN && TRAFFIC_API_URL && TRAFFIC_API_KEY) {
         syncToolUsageToServer(toolName);
       }
     }
@@ -437,7 +437,7 @@ async function updateTrafficWidget() {
   // Try to load global stats from JSONBin.io if enabled
   // Global stats show ALL users combined
   let serverStats = null;
-  if (USE_JSONBIN && TRAFFIC_API_URL) {
+  if (USE_JSONBIN && TRAFFIC_API_URL && TRAFFIC_API_KEY) {
     try {
       const response = await fetch(TRAFFIC_API_URL + '/latest', {
         method: 'GET',
