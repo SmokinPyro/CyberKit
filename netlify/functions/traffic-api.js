@@ -28,11 +28,28 @@ exports.handler = async (event, context) => {
   }
 
   // Use Netlify Blobs for persistent global storage
-  // In Netlify Functions, getStore works with just the store name
-  // Context is automatically available in the function environment
+  // Try to get credentials from context or environment variables
+  const siteID = context.site?.id || process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
+  const token = process.env.NETLIFY_AUTH_TOKEN || process.env.NETLIFY_BLOBS_TOKEN || context.netlify?.authToken;
+  
+  if (!siteID || !token) {
+    console.error('Netlify Blobs not configured. Missing siteID or token.');
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('NETLIFY')));
+    // Fallback: return error or use alternative storage
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Blobs not configured',
+        message: 'Netlify Blobs requires siteID and token. Please configure in Netlify dashboard.'
+      })
+    };
+  }
+  
   const store = getStore({
     name: 'traffic-stats',
-    consistency: 'strong'
+    siteID: siteID,
+    token: token
   });
   
   // Initialize data structure
