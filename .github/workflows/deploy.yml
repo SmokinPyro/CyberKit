@@ -33,8 +33,12 @@ jobs:
         with:
           path: './deploy'
       
-      - name: Wait for deployment
-        run: sleep 5
+      - name: Verify files
+        run: |
+          echo "Checking deploy folder contents:"
+          ls -la deploy/ || dir deploy
+          echo "Checking for index.html:"
+          test -f deploy/index.html && echo "✅ index.html found" || echo "❌ index.html missing"
       
       - name: Deploy to GitHub Pages
         id: deployment
