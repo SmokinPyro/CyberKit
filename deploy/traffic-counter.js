@@ -7,8 +7,11 @@
 // Server API endpoint (set to null to disable server sync)
 // For Netlify: use '/.netlify/functions/traffic-api'
 // For PHP server: use './traffic-api.php'
-// For GitHub Pages: use null (no server-side support)
-const TRAFFIC_API_URL = null; // GitHub Pages - using localStorage only
+// For GitHub Pages: use JSONBin.io free API for global stats
+// Get your free API key from https://jsonbin.io and replace YOUR_API_KEY below
+const TRAFFIC_API_URL = 'https://api.jsonbin.io/v3/b/676a1238e41b4d34e43b3c4a'; // JSONBin.io bin ID
+const TRAFFIC_API_KEY = '$2a$10$YOUR_API_KEY_HERE'; // Replace with your JSONBin.io API key
+const USE_JSONBIN = true; // Set to false to use localStorage only
 
 // Traffic counter data structure
 let trafficData = {
@@ -192,41 +195,85 @@ function recordVisit() {
   }
 }
 
-// Sync visit to server
+// Sync visit to server (JSONBin.io for GitHub Pages)
 async function syncVisitToServer(visitorId) {
-  if (!TRAFFIC_API_URL) {
-    console.debug('Traffic API: Disabled (TRAFFIC_API_URL is null)');
+  if (!USE_JSONBIN || !TRAFFIC_API_URL) {
+    console.debug('Traffic API: Disabled (using localStorage only)');
     return;
   }
   
   try {
-    const response = await fetch(TRAFFIC_API_URL, {
-      method: 'POST',
+    // First, get current global stats
+    const getResponse = await fetch(TRAFFIC_API_URL + '/latest', {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        visitorId: visitorId,
-        timestamp: new Date().toISOString()
-      })
+        'X-Master-Key': TRAFFIC_API_KEY,
+        'X-Bin-Meta': 'false'
+      }
     });
     
-    if (response.ok) {
-      const result = await response.json();
-      console.debug('Traffic API: Visit synced successfully', result);
+    let globalData = {
+      totalVisits: 0,
+      uniqueVisits: 0,
+      toolUsage: {},
+      dailyVisits: {},
+      visitors: [],
+      lastUpdate: null
+    };
+    
+    if (getResponse.ok) {
+      globalData = await getResponse.json();
+      if (!globalData.visitors) globalData.visitors = [];
+      if (!globalData.toolUsage) globalData.toolUsage = {};
+      if (!globalData.dailyVisits) globalData.dailyVisits = {};
+    }
+    
+    // Update global stats
+    const now = new Date().toISOString();
+    const today = now.split('T')[0];
+    
+    // Check if new unique visitor
+    const isNewVisitor = !globalData.visitors.includes(visitorId);
+    if (isNewVisitor) {
+      globalData.uniqueVisits = (globalData.uniqueVisits || 0) + 1;
+      globalData.visitors.push(visitorId);
+      // Keep only last 1000 visitor IDs
+      if (globalData.visitors.length > 1000) {
+        globalData.visitors = globalData.visitors.slice(-1000);
+      }
+    }
+    
+    // Total visits
+    globalData.totalVisits = (globalData.totalVisits || 0) + 1;
+    
+    // Daily visits
+    if (!globalData.dailyVisits[today]) {
+      globalData.dailyVisits[today] = 0;
+    }
+    globalData.dailyVisits[today]++;
+    
+    // Update timestamp
+    globalData.lastUpdate = now;
+    
+    // Save back to JSONBin.io
+    const putResponse = await fetch(TRAFFIC_API_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': TRAFFIC_API_KEY
+      },
+      body: JSON.stringify(globalData)
+    });
+    
+    if (putResponse.ok) {
+      console.debug('Traffic API: Visit synced to global stats successfully');
     } else {
-      const errorText = await response.text();
-      console.error('Traffic API: Server returned error', response.status, errorText);
+      const errorText = await putResponse.text();
+      console.warn('Traffic API: Failed to update global stats', putResponse.status, errorText);
     }
   } catch (e) {
-    // Log error for debugging
-    console.error('Traffic API: Failed to sync visit to server:', e);
-    console.error('Error details:', {
-      message: e.message,
-      stack: e.stack,
-      apiUrl: TRAFFIC_API_URL
-    });
-    console.info('Check: 1) Is traffic-api.php uploaded? 2) Is PHP enabled? 3) Check browser network tab');
+    // Silently fail - localStorage is primary storage
+    console.debug('Traffic API: Failed to sync to global stats (using local only):', e.message);
   }
 }
 
@@ -387,20 +434,28 @@ async function updateTrafficWidget() {
   const toolsEl = document.getElementById('traffic-tools');
   const topToolsEl = document.getElementById('traffic-top-tools');
   
-  // Try to load server stats if API is available
-  // Server stats are GLOBAL (from all users) - use them as primary
+  // Try to load global stats from JSONBin.io if enabled
+  // Global stats show ALL users combined
   let serverStats = null;
-  if (TRAFFIC_API_URL) {
+  if (USE_JSONBIN && TRAFFIC_API_URL) {
     try {
-      const response = await fetch(TRAFFIC_API_URL);
+      const response = await fetch(TRAFFIC_API_URL + '/latest', {
+        method: 'GET',
+        headers: {
+          'X-Master-Key': TRAFFIC_API_KEY,
+          'X-Bin-Meta': 'false'
+        }
+      });
       if (response.ok) {
         serverStats = await response.json();
-        console.debug('Traffic API: Loaded global server stats successfully', {
+        const today = new Date().toISOString().split('T')[0];
+        serverStats.todayVisits = (serverStats.dailyVisits && serverStats.dailyVisits[today]) || 0;
+        console.debug('Traffic API: Loaded global stats successfully', {
           totalVisits: serverStats.totalVisits,
           uniqueVisits: serverStats.uniqueVisits
         });
       } else {
-        console.warn('Traffic API: Server returned error', response.status, '- using local stats');
+        console.warn('Traffic API: Failed to load global stats', response.status, '- using local stats');
       }
     } catch (e) {
       // Fall back to local stats if server unavailable
