@@ -28,7 +28,12 @@ exports.handler = async (event, context) => {
   }
 
   // Use Netlify Blobs for persistent global storage
-  const store = getStore('traffic-stats');
+  // In Netlify Functions, getStore works with just the store name
+  // Context is automatically available in the function environment
+  const store = getStore({
+    name: 'traffic-stats',
+    consistency: 'strong'
+  });
   
   // Initialize data structure
   const defaultData = {
@@ -44,12 +49,23 @@ exports.handler = async (event, context) => {
   // Load existing data from Blobs
   let data = defaultData;
   try {
-    const stored = await store.get('traffic-data', { type: 'json' });
-    if (stored && typeof stored === 'object') {
-      data = { ...defaultData, ...stored };
+    const stored = await store.get('traffic-data');
+    if (stored) {
+      const parsed = typeof stored === 'string' ? JSON.parse(stored) : stored;
+      if (parsed && typeof parsed === 'object') {
+        data = { ...defaultData, ...parsed };
+        console.log('Loaded data from Blobs:', {
+          totalVisits: data.totalVisits,
+          uniqueVisits: data.uniqueVisits
+        });
+      }
     }
   } catch (e) {
     console.error('Error reading from Blobs:', e);
+    console.error('Blobs read error details:', {
+      message: e.message,
+      stack: e.stack
+    });
     data = defaultData;
   }
 
@@ -104,10 +120,17 @@ exports.handler = async (event, context) => {
 
       // Save data to Netlify Blobs (persistent global storage)
       try {
-        await store.set('traffic-data', data);
-        console.log('Traffic data saved to Blobs successfully');
+        await store.set('traffic-data', JSON.stringify(data));
+        console.log('Traffic data saved to Blobs successfully', {
+          totalVisits: data.totalVisits,
+          uniqueVisits: data.uniqueVisits
+        });
       } catch (e) {
         console.error('Error writing to Blobs:', e);
+        console.error('Blobs error details:', {
+          message: e.message,
+          stack: e.stack
+        });
         // Continue anyway - at least return current data
       }
 
