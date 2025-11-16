@@ -53,6 +53,7 @@ const toolNames = {
 
 // Initialize traffic counter
 let trafficCounterInitialized = false;
+let toolTrackingInitialized = false; // Guard for tool tracking
 
 function initTrafficCounter() {
   // Prevent double initialization
@@ -71,7 +72,7 @@ function initTrafficCounter() {
   // Initialize widget
   initTrafficWidget();
   
-  // Track tool usage
+  // Track tool usage (only once)
   trackToolUsage();
   
   // Update widget display (async - loads server stats if available)
@@ -289,6 +290,13 @@ function getVisitorId() {
 
 // Track tool usage
 function trackToolUsage() {
+  // Prevent multiple event listeners
+  if (toolTrackingInitialized) {
+    console.debug('Tool tracking already initialized, skipping...');
+    return;
+  }
+  toolTrackingInitialized = true;
+  
   // Use capture phase to catch clicks early, before other handlers
   document.addEventListener('click', (e) => {
     // Find the button element (could be the target or a parent)
@@ -319,10 +327,17 @@ function trackToolUsage() {
         syncToolUsageToServer(toolName);
       }
       
-      // Debug log (only in development)
-      console.debug('Tool usage tracked:', toolName, 'Total:', trafficData.toolUsage[toolName]);
+      // Log for debugging (visible in console)
+      console.log('✅ Tool usage tracked:', toolName, '| Total:', trafficData.toolUsage[toolName]);
+    } else {
+      // Debug: log untracked button clicks (only for buttons with IDs)
+      if (buttonId && !buttonId.includes('copy') && !buttonId.includes('toggle') && !buttonId.includes('contact')) {
+        console.debug('Button clicked but not tracked:', buttonId);
+      }
     }
   }, true); // Use capture phase
+  
+  console.log('🔧 Tool usage tracking initialized');
 }
 
 // Sync tool usage to server (JSONBin.io for GitHub Pages)
