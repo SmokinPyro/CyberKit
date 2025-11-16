@@ -1,13 +1,14 @@
 /**
- * CyberKit Traffic Counter
+ * CyberKit Traffic Counter - Netlify Version
  * Tracks visits and tool usage using localStorage
- * Optionally syncs with server for shared stats across all visitors
+ * Syncs with Netlify Functions for shared stats across all visitors
  */
 
-// Server API endpoint (set to null to disable server sync)
-// For Netlify: use '/.netlify/functions/traffic-api'
-// For PHP server: use './traffic-api.php'
-const TRAFFIC_API_URL = '/.netlify/functions/traffic-api'; // Netlify Functions endpoint
+// Netlify Functions endpoint (adjust if your function name is different)
+const TRAFFIC_API_URL = '/.netlify/functions/traffic-api';
+
+// Rest of the code is the same as traffic-counter.js
+// Copy everything from traffic-counter.js starting from line 10
 
 // Traffic counter data structure
 let trafficData = {
@@ -170,7 +171,7 @@ async function syncVisitToServer(visitorId) {
       stack: e.stack,
       apiUrl: TRAFFIC_API_URL
     });
-    console.info('Check: 1) Is traffic-api.php uploaded? 2) Is PHP enabled? 3) Check browser network tab');
+    console.info('Check: 1) Is Netlify function deployed? 2) Check browser network tab');
   }
 }
 
@@ -313,8 +314,6 @@ function initTrafficWidget() {
   // Widget is now fixed to page end, no need for dragging
 }
 
-// Widget is now fixed to page end, no dragging needed
-
 // Update traffic widget display
 async function updateTrafficWidget() {
   const totalEl = document.getElementById('traffic-total');
@@ -337,7 +336,7 @@ async function updateTrafficWidget() {
     } catch (e) {
       // Fall back to local stats if server unavailable
       console.warn('Traffic API: Server unavailable, using local stats:', e.message);
-      console.info('Make sure traffic-api.php is uploaded to the server and PHP is enabled');
+      console.info('Make sure Netlify function is deployed and accessible');
     }
   }
   

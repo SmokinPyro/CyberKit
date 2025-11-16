@@ -1,3 +1,4 @@
-# This file ensures the deploy folder structure is preserved in git
-# The deploy folder contains production-ready files for server upload
-
+# This file ensures the deploy directory is tracked by git
+# 
+# IMPORTANT: traffic-data.json is created on the server and should NEVER be in this folder
+# The update-deploy scripts automatically remove it if found here

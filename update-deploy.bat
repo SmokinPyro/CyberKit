@@ -14,6 +14,27 @@ echo ✅ Copied style.css
 copy /Y .htaccess deploy\.htaccess >nul
 echo ✅ Copied .htaccess
 
+REM Copy traffic counter files
+if exist traffic-counter.js (
+    copy /Y traffic-counter.js deploy\traffic-counter.js >nul
+    echo ✅ Copied traffic-counter.js
+)
+if exist traffic-api.php (
+    copy /Y traffic-api.php deploy\traffic-api.php >nul
+    echo ✅ Copied traffic-api.php
+)
+
+REM Copy Netlify function
+if exist netlify\functions\traffic-api.js (
+    if not exist deploy\netlify\functions mkdir deploy\netlify\functions
+    copy /Y netlify\functions\traffic-api.js deploy\netlify\functions\traffic-api.js >nul
+    echo ✅ Copied Netlify function
+)
+if exist netlify.toml (
+    copy /Y netlify.toml deploy\netlify.toml >nul
+    echo ✅ Copied netlify.toml
+)
+
 REM Copy logo
 if exist assets\images\cyberkit-logo.png (
     copy /Y assets\images\cyberkit-logo.png deploy\assets\images\cyberkit-logo.png >nul
@@ -28,8 +49,33 @@ if exist deploy\app.js (
     echo ⚠️  Removed app.js from deploy (source code protection)
 )
 
+REM CRITICAL: Remove traffic-data.json from deploy folder if it exists
+REM This file must NEVER be in deploy folder - it's created on the server!
+if exist deploy\traffic-data.json (
+    del deploy\traffic-data.json >nul
+    echo ⚠️  Removed traffic-data.json from deploy (must stay on server only!)
+)
+
+REM Also remove any backup files
+if exist deploy\traffic-data.json.backup (
+    del deploy\traffic-data.json.backup >nul
+    echo ⚠️  Removed traffic-data.json.backup from deploy
+)
+
+echo.
+echo ✅ Safety checks passed:
+echo    - app.js removed (source code protection)
+echo    - traffic-data.json removed (server-only file)
+echo.
+echo ⚠️  IMPORTANT: When uploading to server, DO NOT overwrite traffic-data.json
+echo 📊 The stats file is on the server and must be preserved!
+echo 💡 See DEPLOY-WITH-STATS-PRESERVATION.md for details
 echo.
 echo ✨ Deployment folder updated!
-echo 📦 Ready to upload deploy/ folder to Apache server
+echo 📦 Ready to upload deploy/ folder to Netlify or Apache server
+echo.
+echo 📝 Changes included:
+echo    - Updated index.html (Contact Me link added)
+echo    - All files synced to deploy folder
 pause
 

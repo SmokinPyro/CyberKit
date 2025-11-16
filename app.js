@@ -47,7 +47,107 @@ document.addEventListener("DOMContentLoaded", () => {
   // Crypto tools
   initCipherTool();
   initJwtTool();
+  
+  // Contact modal handlers
+  initContactModal();
 });
+
+// Contact Modal Functions
+function initContactModal() {
+  // Close modal when clicking outside
+  const modal = document.getElementById('contact-modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeContactModal();
+      }
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        closeContactModal();
+      }
+    });
+  }
+}
+
+function showContactModal() {
+  const modal = document.getElementById('contact-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    // Reset copy button state
+    const copyBtn = document.querySelector('.contact-copy-btn');
+    if (copyBtn) {
+      copyBtn.classList.remove('copied');
+      const copyText = copyBtn.querySelector('.contact-copy-text');
+      if (copyText) {
+        copyText.textContent = 'Copy';
+      }
+    }
+  }
+}
+
+function closeContactModal() {
+  const modal = document.getElementById('contact-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function copyEmailToClipboard() {
+  const email = 'karimashraf0888@gmail.com';
+  const copyBtn = document.querySelector('.contact-copy-btn');
+  const copyText = copyBtn.querySelector('.contact-copy-text');
+  
+  // Use modern Clipboard API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(email).then(() => {
+      // Success feedback
+      copyBtn.classList.add('copied');
+      copyText.textContent = 'Copied!';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyText.textContent = 'Copy';
+      }, 2000);
+    }).catch((err) => {
+      // Fallback for older browsers
+      fallbackCopyEmail(email, copyBtn, copyText);
+    });
+  } else {
+    // Fallback for older browsers
+    fallbackCopyEmail(email, copyBtn, copyText);
+  }
+}
+
+function fallbackCopyEmail(email, copyBtn, copyText) {
+  // Create temporary textarea
+  const textarea = document.createElement('textarea');
+  textarea.value = email;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, 99999); // For mobile devices
+  
+  try {
+    const successful = document.execCommand('copy');
+    if (successful) {
+      copyBtn.classList.add('copied');
+      copyText.textContent = 'Copied!';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyText.textContent = 'Copy';
+      }, 2000);
+    } else {
+      alert('Failed to copy. Please copy manually: ' + email);
+    }
+  } catch (err) {
+    alert('Failed to copy. Please copy manually: ' + email);
+  }
+  
+  document.body.removeChild(textarea);
+}
 
 /* ---------- Footer year ---------- */
 

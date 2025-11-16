@@ -35,13 +35,19 @@ yarn-error.log*
 .env.local
 .env.*.local
 
+# Server tracking data (created on server, not in repo)
+traffic-data.json
+traffic-data.json.backup
+
 # Build outputs (if any)
 dist/
 build/
 *.min.js
 *.min.css
-*.obf.js
+# Allow obfuscated files in deploy folder
+app.obf.js
 *.obfuscated.js
+!deploy/*.obf.js
 
 # Node modules (if you add npm packages later)
 node_modules/
@@ -50,4 +56,8 @@ node_modules/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+# README files (keep local, don't commit to avoid deployment issues)
+README.md
+**/README*.md
 

@@ -1,0 +1,26 @@
+# Netlify Configuration
+# This file helps Netlify understand your project structure
+
+[build]
+  # No build command needed - this is a static site
+  # (Omitting 'command' tells Netlify to skip the build step)
+  
+  # Publish directory: "deploy" means the deploy/ subdirectory in repo root
+  # This is correct when deploying the entire repo via Git
+  publish = "deploy"
+
+# Function configuration
+[functions]
+  # Directory where functions are located (relative to repo root)
+  # Functions are in deploy/netlify/functions, so path is:
+  directory = "deploy/netlify/functions"
+  
+  # Node version for functions
+  node_bundler = "esbuild"
+
+# Redirects (optional - for SPA routing if needed)
+# [[redirects]]
+#   from = "/*"
+#   to = "/index.html"
+#   status = 200
+

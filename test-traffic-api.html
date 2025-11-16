@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic API Tester</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #1e293b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .info {
+            color: #60a5fa;
+        }
+        pre {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Traffic API Diagnostic Tool</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Check if PHP file exists</h2>
+        <button onclick="testFileExists()">Test File Exists</button>
+        <div id="file-test"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Test GET Request (Read Stats)</h2>
+        <button onclick="testGet()">Test GET</button>
+        <div id="get-test"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Test POST Request (Send Visit)</h2>
+        <button onclick="testPost()">Test POST</button>
+        <div id="post-test"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 4: Check Browser Console</h2>
+        <p class="info">Open browser console (F12) to see detailed error messages</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>Current Stats</h2>
+        <button onclick="loadStats()">Refresh Stats</button>
+        <pre id="stats-display">Click "Refresh Stats" to load</pre>
+    </div>
+
+    <script>
+        const API_URL = './traffic-api.php';
+        
+        async function testFileExists() {
+            const result = document.getElementById('file-test');
+            result.innerHTML = '<span class="info">Testing...</span>';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'HEAD'
+                });
+                
+                if (response.ok) {
+                    result.innerHTML = '<span class="success">✅ PHP file exists and is accessible</span>';
+                } else {
+                    result.innerHTML = `<span class="error">❌ PHP file returned status: ${response.status}</span>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<span class="error">❌ Error: ${e.message}<br>Make sure traffic-api.php is uploaded to the server!</span>`;
+                console.error('File test error:', e);
+            }
+        }
+        
+        async function testGet() {
+            const result = document.getElementById('get-test');
+            result.innerHTML = '<span class="info">Testing GET request...</span>';
+            
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<span class="success">✅ GET request successful!</span><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ GET request failed: ${response.status}</span><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<span class="error">❌ Error: ${e.message}</span>`;
+                console.error('GET test error:', e);
+            }
+        }
+        
+        async function testPost() {
+            const result = document.getElementById('post-test');
+            result.innerHTML = '<span class="info">Testing POST request...</span>';
+            
+            const testData = {
+                visitorId: 'test_' + Date.now(),
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<span class="success">✅ POST request successful!</span><pre>Sent: ${JSON.stringify(testData, null, 2)}\n\nResponse: ${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    result.innerHTML = `<span class="error">❌ POST request failed: ${response.status}</span><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<span class="error">❌ Error: ${e.message}</span>`;
+                console.error('POST test error:', e);
+            }
+        }
+        
+        async function loadStats() {
+            const display = document.getElementById('stats-display');
+            display.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                display.textContent = JSON.stringify(data, null, 2);
+            } catch (e) {
+                display.textContent = `Error: ${e.message}`;
+                console.error('Load stats error:', e);
+            }
+        }
+        
+        // Auto-run file test on load
+        window.addEventListener('load', () => {
+            setTimeout(testFileExists, 500);
+        });
+    </script>
+</body>
+</html>
+

@@ -1,7 +1,13 @@
 /**
  * CyberKit Traffic Counter
  * Tracks visits and tool usage using localStorage
+ * Optionally syncs with server for shared stats across all visitors
  */
+
+// Server API endpoint (set to null to disable server sync)
+// For Netlify: use '/.netlify/functions/traffic-api'
+// For PHP server: use './traffic-api.php'
+const TRAFFIC_API_URL = '/.netlify/functions/traffic-api'; // Netlify Functions endpoint
 
 // Traffic counter data structure
 let trafficData = {
@@ -55,8 +61,15 @@ function initTrafficCounter() {
   // Track tool usage
   trackToolUsage();
   
-  // Update widget display
+  // Update widget display (async - loads server stats if available)
   updateTrafficWidget();
+  
+  // Refresh stats from server periodically (every 30 seconds)
+  if (TRAFFIC_API_URL) {
+    setInterval(() => {
+      updateTrafficWidget();
+    }, 30000);
+  }
 }
 
 // Load traffic data from localStorage
@@ -116,13 +129,56 @@ function recordVisit() {
   trafficData.dailyVisits[today]++;
   
   saveTrafficData();
+  
+  // Sync with server (if API URL is set)
+  if (TRAFFIC_API_URL) {
+    syncVisitToServer(visitorId);
+  }
+}
+
+// Sync visit to server
+async function syncVisitToServer(visitorId) {
+  if (!TRAFFIC_API_URL) {
+    console.debug('Traffic API: Disabled (TRAFFIC_API_URL is null)');
+    return;
+  }
+  
+  try {
+    const response = await fetch(TRAFFIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        visitorId: visitorId,
+        timestamp: new Date().toISOString()
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.debug('Traffic API: Visit synced successfully', result);
+    } else {
+      const errorText = await response.text();
+      console.error('Traffic API: Server returned error', response.status, errorText);
+    }
+  } catch (e) {
+    // Log error for debugging
+    console.error('Traffic API: Failed to sync visit to server:', e);
+    console.error('Error details:', {
+      message: e.message,
+      stack: e.stack,
+      apiUrl: TRAFFIC_API_URL
+    });
+    console.info('Check: 1) Is traffic-api.php uploaded? 2) Is PHP enabled? 3) Check browser network tab');
+  }
 }
 
 // Get or create visitor ID
 function getVisitorId() {
   let visitorId = localStorage.getItem('cyberkit_visitor_id');
   if (!visitorId) {
-    visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
     localStorage.setItem('cyberkit_visitor_id', visitorId);
   }
   return visitorId;
@@ -147,8 +203,52 @@ function trackToolUsage() {
       trafficData.toolUsage[toolName]++;
       saveTrafficData();
       updateTrafficWidget();
+      
+      // Sync tool usage to server (if API URL is set)
+      if (TRAFFIC_API_URL) {
+        syncToolUsageToServer(toolName);
+      }
     }
   });
+}
+
+// Sync tool usage to server
+async function syncToolUsageToServer(toolName) {
+  if (!TRAFFIC_API_URL) {
+    console.debug('Traffic API: Disabled (TRAFFIC_API_URL is null)');
+    return;
+  }
+  
+  try {
+    const visitorId = getVisitorId();
+    const response = await fetch(TRAFFIC_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        visitorId: visitorId,
+        toolName: toolName,
+        timestamp: new Date().toISOString()
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      console.debug('Traffic API: Tool usage synced successfully', { toolName, result });
+    } else {
+      const errorText = await response.text();
+      console.error('Traffic API: Server returned error', response.status, errorText);
+    }
+  } catch (e) {
+    // Log error for debugging
+    console.error('Traffic API: Failed to sync tool usage to server:', e);
+    console.error('Error details:', {
+      message: e.message,
+      toolName: toolName,
+      apiUrl: TRAFFIC_API_URL
+    });
+  }
 }
 
 // Initialize traffic widget
@@ -187,7 +287,19 @@ function initTrafficWidget() {
     </div>
   `;
   
-  document.body.appendChild(widget);
+  // Append to stats section container
+  const statsContainer = document.getElementById('traffic-widget-container');
+  if (statsContainer) {
+    statsContainer.appendChild(widget);
+  } else {
+    // Fallback to page container
+    const pageContainer = document.querySelector('.page');
+    if (pageContainer) {
+      pageContainer.appendChild(widget);
+    } else {
+      document.body.appendChild(widget);
+    }
+  }
   
   // Toggle widget
   const toggle = document.getElementById('traffic-toggle');
@@ -198,76 +310,68 @@ function initTrafficWidget() {
     toggle.textContent = isHidden ? '−' : '+';
   });
   
-  // Make widget draggable (optional)
-  makeWidgetDraggable(widget);
+  // Widget is now fixed to page end, no need for dragging
 }
 
-// Make widget draggable
-function makeWidgetDraggable(widget) {
-  let isDragging = false;
-  let currentX;
-  let currentY;
-  let initialX;
-  let initialY;
-  
-  const header = widget.querySelector('.traffic-widget-header');
-  
-  header.addEventListener('mousedown', (e) => {
-    if (e.target.classList.contains('traffic-toggle')) return;
-    
-    isDragging = true;
-    initialX = e.clientX - widget.offsetLeft;
-    initialY = e.clientY - widget.offsetTop;
-  });
-  
-  document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    
-    e.preventDefault();
-    currentX = e.clientX - initialX;
-    currentY = e.clientY - initialY;
-    
-    // Keep widget within viewport
-    const maxX = window.innerWidth - widget.offsetWidth;
-    const maxY = window.innerHeight - widget.offsetHeight;
-    
-    currentX = Math.max(0, Math.min(currentX, maxX));
-    currentY = Math.max(0, Math.min(currentY, maxY));
-    
-    widget.style.left = currentX + 'px';
-    widget.style.top = currentY + 'px';
-    widget.style.right = 'auto';
-    widget.style.bottom = 'auto';
-  });
-  
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
-}
+// Widget is now fixed to page end, no dragging needed
 
 // Update traffic widget display
-function updateTrafficWidget() {
+async function updateTrafficWidget() {
   const totalEl = document.getElementById('traffic-total');
   const uniqueEl = document.getElementById('traffic-unique');
   const todayEl = document.getElementById('traffic-today');
   const toolsEl = document.getElementById('traffic-tools');
   const topToolsEl = document.getElementById('traffic-top-tools');
   
-  if (totalEl) totalEl.textContent = formatNumber(trafficData.totalVisits);
-  if (uniqueEl) uniqueEl.textContent = formatNumber(trafficData.uniqueVisits);
+  // Try to load server stats if API is available
+  let serverStats = null;
+  if (TRAFFIC_API_URL) {
+    try {
+      const response = await fetch(TRAFFIC_API_URL);
+      if (response.ok) {
+        serverStats = await response.json();
+        console.debug('Traffic API: Loaded server stats successfully');
+      } else {
+        console.warn('Traffic API: Server returned error', response.status, '- using local stats');
+      }
+    } catch (e) {
+      // Fall back to local stats if server unavailable
+      console.warn('Traffic API: Server unavailable, using local stats:', e.message);
+      console.info('Make sure traffic-api.php is uploaded to the server and PHP is enabled');
+    }
+  }
+  
+  // Use server stats if available, otherwise use local
+  const displayStats = serverStats || {
+    totalVisits: trafficData.totalVisits,
+    uniqueVisits: trafficData.uniqueVisits,
+    todayVisits: (() => {
+      const today = new Date().toISOString().split('T')[0];
+      return trafficData.dailyVisits[today] || 0;
+    })(),
+    toolUsage: trafficData.toolUsage
+  };
+  
+  if (totalEl) totalEl.textContent = formatNumber(displayStats.totalVisits);
+  if (uniqueEl) uniqueEl.textContent = formatNumber(displayStats.uniqueVisits);
   
   // Today's visits
-  const today = new Date().toISOString().split('T')[0];
-  const todayCount = trafficData.dailyVisits[today] || 0;
-  if (todayEl) todayEl.textContent = formatNumber(todayCount);
+  if (todayEl) {
+    const todayCount = serverStats ? displayStats.todayVisits : (() => {
+      const today = new Date().toISOString().split('T')[0];
+      return trafficData.dailyVisits[today] || 0;
+    })();
+    todayEl.textContent = formatNumber(todayCount);
+  }
   
   // Total tool usage
-  const totalToolUsage = Object.values(trafficData.toolUsage).reduce((sum, count) => sum + count, 0);
+  const totalToolUsage = Object.values(displayStats.toolUsage || {}).reduce((sum, count) => sum + count, 0);
   if (toolsEl) toolsEl.textContent = formatNumber(totalToolUsage);
   
   // Top tools
   if (topToolsEl) {
-    const topTools = Object.entries(trafficData.toolUsage)
+    const toolUsage = displayStats.toolUsage || displayStats.topTools || trafficData.toolUsage;
+    const topTools = Object.entries(toolUsage)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
     
@@ -302,4 +406,12 @@ function getTrafficData() {
 
 // Make it available globally for console access
 window.getTrafficData = getTrafficData;
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTrafficCounter);
+} else {
+  // DOM already loaded
+  initTrafficCounter();
+}
 

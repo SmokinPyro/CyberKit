@@ -675,19 +675,26 @@
         </div>
       </section>
 
-      <!-- ABOUT -->
-      <section id="about" class="about-section">
-        <h2>About CyberKit</h2>
-        <p>
-          CyberKit is a free, browser-based toolbox for students, blue-teamers and
-          curious learners. No login, no tracking, and the core tools run entirely
-          on your machine.
-        </p>
-        <p>
-          You can customize this text later with your own story, links, and
-          disclaimers.
-        </p>
-      </section>
+      <!-- ABOUT & STATS -->
+      <div class="about-stats-container">
+        <section id="about" class="about-section">
+          <h2>About CyberKit</h2>
+          <p>
+            CyberKit is a free, browser-based toolbox for students, blue-teamers and
+            curious learners. No login, no tracking, and the core tools run entirely
+            on your machine.
+          </p>
+          <p>
+            You can customize this text later with your own story, links, and
+            disclaimers.
+          </p>
+        </section>
+
+        <section id="stats" class="stats-section">
+          <h2>Statistics</h2>
+          <div id="traffic-widget-container"></div>
+        </section>
+      </div>
     </main>
 
     <!-- FOOTER -->
@@ -696,15 +703,37 @@
       <div class="links">
         <a href="#about">About</a>
         <a href="#security">Security note</a>
+        <a href="#" onclick="showContactModal(); return false;">Contact Me</a>
         <a
           href="#"
           onclick="alert('Add a proper legal disclaimer page later.'); return false;"
         >Disclaimer</a>
       </div>
     </footer>
+
+    <!-- Contact Modal -->
+    <div id="contact-modal" class="contact-modal" style="display: none;">
+      <div class="contact-modal-content">
+        <div class="contact-modal-header">
+          <h3>Contact Me</h3>
+          <button class="contact-modal-close" onclick="closeContactModal()">&times;</button>
+        </div>
+        <div class="contact-modal-body">
+          <p class="contact-email-label">Email Address:</p>
+          <div class="contact-email-container">
+            <span class="contact-email" id="contact-email">karimashraf0888@gmail.com</span>
+            <button class="contact-copy-btn" onclick="copyEmailToClipboard()" title="Copy to clipboard">
+              <span class="contact-copy-icon">📋</span>
+              <span class="contact-copy-text">Copy</span>
+            </button>
+          </div>
+          <p class="contact-hint">Click the copy button to copy the email address to your clipboard.</p>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <script src="app.obf.js"></script>
   <script src="traffic-counter.js"></script>
+  <script src="app.obf.js"></script>
 </body>
 </html>
