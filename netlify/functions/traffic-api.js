@@ -4,18 +4,10 @@
  * 
  * Path: netlify/functions/traffic-api.js
  * 
- * ⚠️ IMPORTANT: Netlify Functions use /tmp which is EPHEMERAL
- * Data will be lost when function containers are recycled.
- * 
- * For persistent storage, consider:
- * - FaunaDB (free tier available)
- * - MongoDB Atlas (free tier available)
- * - Supabase (free tier available)
- * - Or use client-side localStorage as primary (current fallback)
+ * Uses Netlify Blobs for persistent global storage across all users
  */
 
-const fs = require('fs');
-const path = require('path');
+const { getStore } = require('@netlify/blobs');
 
 exports.handler = async (event, context) => {
   // Set CORS headers
@@ -35,12 +27,9 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // ⚠️ WARNING: /tmp is EPHEMERAL in Netlify Functions
-  // Data will be lost when containers recycle
-  // This is a limitation of serverless functions
-  // Client-side localStorage is used as primary storage
-  const dataFile = '/tmp/traffic-data.json';
-
+  // Use Netlify Blobs for persistent global storage
+  const store = getStore('traffic-stats');
+  
   // Initialize data structure
   const defaultData = {
     totalVisits: 0,
@@ -52,18 +41,15 @@ exports.handler = async (event, context) => {
     visitors: []
   };
 
-  // Load existing data
+  // Load existing data from Blobs
   let data = defaultData;
   try {
-    if (fs.existsSync(dataFile)) {
-      const fileContent = fs.readFileSync(dataFile, 'utf8');
-      const parsed = JSON.parse(fileContent);
-      if (parsed && typeof parsed === 'object') {
-        data = parsed;
-      }
+    const stored = await store.get('traffic-data', { type: 'json' });
+    if (stored && typeof stored === 'object') {
+      data = { ...defaultData, ...stored };
     }
   } catch (e) {
-    console.error('Error reading data file:', e);
+    console.error('Error reading from Blobs:', e);
     data = defaultData;
   }
 
@@ -116,23 +102,23 @@ exports.handler = async (event, context) => {
         data.toolUsage[toolName]++;
       }
 
-      // Save data (may be lost on container recycle - this is expected)
+      // Save data to Netlify Blobs (persistent global storage)
       try {
-        fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+        await store.set('traffic-data', data);
+        console.log('Traffic data saved to Blobs successfully');
       } catch (e) {
-        console.error('Error writing data file:', e);
-        // Don't fail - client-side will handle persistence
+        console.error('Error writing to Blobs:', e);
+        // Continue anyway - at least return current data
       }
 
-      // Return success with warning if data might be ephemeral
+      // Return success
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           success: true,
           totalVisits: data.totalVisits,
-          uniqueVisits: data.uniqueVisits,
-          warning: 'Server stats may reset due to ephemeral storage. Client-side stats are primary.'
+          uniqueVisits: data.uniqueVisits
         })
       };
 

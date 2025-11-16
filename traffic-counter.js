@@ -387,22 +387,17 @@ async function updateTrafficWidget() {
   const topToolsEl = document.getElementById('traffic-top-tools');
   
   // Try to load server stats if API is available
-  // NOTE: For Netlify, server stats may reset due to ephemeral storage
-  // Client-side localStorage is the PRIMARY source of truth
+  // Server stats are GLOBAL (from all users) - use them as primary
   let serverStats = null;
   if (TRAFFIC_API_URL) {
     try {
       const response = await fetch(TRAFFIC_API_URL);
       if (response.ok) {
-        const serverData = await response.json();
-        // Only use server stats if they're higher than local (to handle resets)
-        // This prevents server resets from overwriting accumulated client data
-        if (serverData.totalVisits && serverData.totalVisits > trafficData.totalVisits) {
-          serverStats = serverData;
-          console.debug('Traffic API: Using server stats (higher than local)');
-        } else {
-          console.debug('Traffic API: Server stats lower than local, using local (server may have reset)');
-        }
+        serverStats = await response.json();
+        console.debug('Traffic API: Loaded global server stats successfully', {
+          totalVisits: serverStats.totalVisits,
+          uniqueVisits: serverStats.uniqueVisits
+        });
       } else {
         console.warn('Traffic API: Server returned error', response.status, '- using local stats');
       }
@@ -412,8 +407,8 @@ async function updateTrafficWidget() {
     }
   }
   
-  // Use server stats if available and valid, otherwise use local (PRIMARY)
-  // Local stats are always preserved in localStorage
+  // Use server stats (GLOBAL) if available, otherwise fall back to local
+  // Server stats show ALL users combined, local stats are per-browser
   const displayStats = serverStats || {
     totalVisits: trafficData.totalVisits,
     uniqueVisits: trafficData.uniqueVisits,
