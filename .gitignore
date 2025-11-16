@@ -50,7 +50,9 @@ app.js
 index.html
 style.css
 traffic-counter.js
+!deploy/traffic-counter.js  # Allow deploy version
 assets/
+!deploy/assets/  # Allow deploy assets
 obfuscate-*.js
 *.bat
 *.ps1
