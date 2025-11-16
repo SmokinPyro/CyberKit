@@ -9,9 +9,9 @@
 // For PHP server: use './traffic-api.php'
 // For GitHub Pages: use JSONBin.io free API for global stats
 // Get your free API key from https://jsonbin.io and replace YOUR_API_KEY below
-const TRAFFIC_API_URL = null; // Set to 'https://api.jsonbin.io/v3/b/YOUR_BIN_ID' for global stats
-const TRAFFIC_API_KEY = null; // Set to your JSONBin.io API key (starts with '$2a$10$')
-const USE_JSONBIN = false; // Set to true and configure above for global stats
+const TRAFFIC_API_URL = 'https://api.jsonbin.io/v3/b/6919755643b1c97be9b08a53'; // JSONBin.io bin ID for global stats
+const TRAFFIC_API_KEY = '$2a$10$R0dXsPxy7xybloqSE7JMOerAsO.bI3Y60q7etpX.j/AWRCXNAho0a'; // JSONBin.io API key
+const USE_JSONBIN = true; // Global stats enabled
 
 // Traffic counter data structure
 let trafficData = {
