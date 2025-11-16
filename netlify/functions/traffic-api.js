@@ -3,6 +3,15 @@
  * This replaces traffic-api.php for Netlify hosting
  * 
  * Path: netlify/functions/traffic-api.js
+ * 
+ * ⚠️ IMPORTANT: Netlify Functions use /tmp which is EPHEMERAL
+ * Data will be lost when function containers are recycled.
+ * 
+ * For persistent storage, consider:
+ * - FaunaDB (free tier available)
+ * - MongoDB Atlas (free tier available)
+ * - Supabase (free tier available)
+ * - Or use client-side localStorage as primary (current fallback)
  */
 
 const fs = require('fs');
@@ -26,7 +35,10 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Data file location (in /tmp for Netlify Functions)
+  // ⚠️ WARNING: /tmp is EPHEMERAL in Netlify Functions
+  // Data will be lost when containers recycle
+  // This is a limitation of serverless functions
+  // Client-side localStorage is used as primary storage
   const dataFile = '/tmp/traffic-data.json';
 
   // Initialize data structure
@@ -104,21 +116,23 @@ exports.handler = async (event, context) => {
         data.toolUsage[toolName]++;
       }
 
-      // Save data
+      // Save data (may be lost on container recycle - this is expected)
       try {
         fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
       } catch (e) {
         console.error('Error writing data file:', e);
+        // Don't fail - client-side will handle persistence
       }
 
-      // Return success
+      // Return success with warning if data might be ephemeral
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           success: true,
           totalVisits: data.totalVisits,
-          uniqueVisits: data.uniqueVisits
+          uniqueVisits: data.uniqueVisits,
+          warning: 'Server stats may reset due to ephemeral storage. Client-side stats are primary.'
         })
       };
 

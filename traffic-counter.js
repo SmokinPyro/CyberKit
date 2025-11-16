@@ -81,24 +81,70 @@ function initTrafficCounter() {
   }
 }
 
-// Load traffic data from localStorage
+// Load traffic data from localStorage (PRIMARY storage)
 function loadTrafficData() {
   try {
     const saved = localStorage.getItem('cyberkit_traffic');
     if (saved) {
-      trafficData = JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Ensure all required fields exist
+      trafficData = {
+        totalVisits: parsed.totalVisits || 0,
+        uniqueVisits: parsed.uniqueVisits || 0,
+        sessionVisits: parsed.sessionVisits || 0,
+        toolUsage: parsed.toolUsage || {},
+        firstVisit: parsed.firstVisit || null,
+        lastVisit: parsed.lastVisit || null,
+        dailyVisits: parsed.dailyVisits || {}
+      };
+      console.debug('Traffic data loaded from localStorage:', {
+        totalVisits: trafficData.totalVisits,
+        uniqueVisits: trafficData.uniqueVisits
+      });
+    } else {
+      console.debug('No existing traffic data found, starting fresh');
     }
   } catch (e) {
     console.warn('Failed to load traffic data:', e);
+    // Reset to defaults on error
+    trafficData = {
+      totalVisits: 0,
+      uniqueVisits: 0,
+      sessionVisits: 0,
+      toolUsage: {},
+      firstVisit: null,
+      lastVisit: null,
+      dailyVisits: {}
+    };
   }
 }
 
-// Save traffic data to localStorage
+// Save traffic data to localStorage (PRIMARY storage - persists across sessions)
 function saveTrafficData() {
   try {
     localStorage.setItem('cyberkit_traffic', JSON.stringify(trafficData));
+    console.debug('Traffic data saved to localStorage');
   } catch (e) {
-    console.warn('Failed to save traffic data:', e);
+    console.error('Failed to save traffic data:', e);
+    // If localStorage is full, try to clean old data
+    if (e.name === 'QuotaExceededError') {
+      console.warn('localStorage full, attempting cleanup...');
+      try {
+        // Keep only last 30 days of daily visits
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const cutoff = thirtyDaysAgo.toISOString().split('T')[0];
+        Object.keys(trafficData.dailyVisits).forEach(date => {
+          if (date < cutoff) {
+            delete trafficData.dailyVisits[date];
+          }
+        });
+        localStorage.setItem('cyberkit_traffic', JSON.stringify(trafficData));
+        console.info('Cleaned old data and saved successfully');
+      } catch (cleanupError) {
+        console.error('Cleanup failed:', cleanupError);
+      }
+    }
   }
 }
 
@@ -341,24 +387,33 @@ async function updateTrafficWidget() {
   const topToolsEl = document.getElementById('traffic-top-tools');
   
   // Try to load server stats if API is available
+  // NOTE: For Netlify, server stats may reset due to ephemeral storage
+  // Client-side localStorage is the PRIMARY source of truth
   let serverStats = null;
   if (TRAFFIC_API_URL) {
     try {
       const response = await fetch(TRAFFIC_API_URL);
       if (response.ok) {
-        serverStats = await response.json();
-        console.debug('Traffic API: Loaded server stats successfully');
+        const serverData = await response.json();
+        // Only use server stats if they're higher than local (to handle resets)
+        // This prevents server resets from overwriting accumulated client data
+        if (serverData.totalVisits && serverData.totalVisits > trafficData.totalVisits) {
+          serverStats = serverData;
+          console.debug('Traffic API: Using server stats (higher than local)');
+        } else {
+          console.debug('Traffic API: Server stats lower than local, using local (server may have reset)');
+        }
       } else {
         console.warn('Traffic API: Server returned error', response.status, '- using local stats');
       }
     } catch (e) {
       // Fall back to local stats if server unavailable
-      console.warn('Traffic API: Server unavailable, using local stats:', e.message);
-      console.info('Make sure traffic-api.php is uploaded to the server and PHP is enabled');
+      console.debug('Traffic API: Server unavailable, using local stats:', e.message);
     }
   }
   
-  // Use server stats if available, otherwise use local
+  // Use server stats if available and valid, otherwise use local (PRIMARY)
+  // Local stats are always preserved in localStorage
   const displayStats = serverStats || {
     totalVisits: trafficData.totalVisits,
     uniqueVisits: trafficData.uniqueVisits,
