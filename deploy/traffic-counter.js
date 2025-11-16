@@ -289,9 +289,13 @@ function getVisitorId() {
 
 // Track tool usage
 function trackToolUsage() {
-  // Listen for all button clicks
+  // Use capture phase to catch clicks early, before other handlers
   document.addEventListener('click', (e) => {
-    const button = e.target.closest('button');
+    // Find the button element (could be the target or a parent)
+    let button = e.target;
+    if (button.tagName !== 'BUTTON') {
+      button = e.target.closest('button');
+    }
     if (!button) return;
     
     const buttonId = button.id;
@@ -300,57 +304,85 @@ function trackToolUsage() {
     // Check if this is a tracked tool
     const toolName = toolNames[buttonId];
     if (toolName) {
+      // Increment local counter
       if (!trafficData.toolUsage[toolName]) {
         trafficData.toolUsage[toolName] = 0;
       }
       trafficData.toolUsage[toolName]++;
       saveTrafficData();
+      
+      // Update widget display
       updateTrafficWidget();
       
       // Sync tool usage to server (if JSONBin.io is configured)
       if (USE_JSONBIN && TRAFFIC_API_URL && TRAFFIC_API_KEY) {
         syncToolUsageToServer(toolName);
       }
+      
+      // Debug log (only in development)
+      console.debug('Tool usage tracked:', toolName, 'Total:', trafficData.toolUsage[toolName]);
     }
-  });
+  }, true); // Use capture phase
 }
 
-// Sync tool usage to server
+// Sync tool usage to server (JSONBin.io for GitHub Pages)
 async function syncToolUsageToServer(toolName) {
-  if (!TRAFFIC_API_URL) {
-    console.debug('Traffic API: Disabled (TRAFFIC_API_URL is null)');
+  if (!USE_JSONBIN || !TRAFFIC_API_URL || !TRAFFIC_API_KEY) {
+    console.debug('Traffic API: Disabled (using localStorage only)');
     return;
   }
-  
+
   try {
-    const visitorId = getVisitorId();
-    const response = await fetch(TRAFFIC_API_URL, {
-      method: 'POST',
+    // First, get current global data
+    const getResponse = await fetch(TRAFFIC_API_URL + '/latest', {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        visitorId: visitorId,
-        toolName: toolName,
-        timestamp: new Date().toISOString()
-      })
+        'X-Master-Key': TRAFFIC_API_KEY,
+        'X-Bin-Meta': 'false'
+      }
     });
-    
-    if (response.ok) {
-      const result = await response.json();
-      console.debug('Traffic API: Tool usage synced successfully', { toolName, result });
+
+    let globalData = {
+      totalVisits: 0,
+      uniqueVisits: 0,
+      toolUsage: {},
+      dailyVisits: {},
+      visitors: [],
+      lastUpdate: null
+    };
+
+    if (getResponse.ok) {
+      globalData = await getResponse.json();
+      if (!globalData.toolUsage) globalData.toolUsage = {};
+    }
+
+    // Update tool usage
+    if (!globalData.toolUsage[toolName]) {
+      globalData.toolUsage[toolName] = 0;
+    }
+    globalData.toolUsage[toolName]++;
+    globalData.lastUpdate = new Date().toISOString(); // Update timestamp
+
+    // Save back to JSONBin.io
+    const putResponse = await fetch(TRAFFIC_API_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': TRAFFIC_API_KEY
+      },
+      body: JSON.stringify(globalData)
+    });
+
+    if (putResponse.ok) {
+      console.debug('Traffic API: Tool usage synced successfully', {
+        toolName
+      });
     } else {
-      const errorText = await response.text();
-      console.error('Traffic API: Server returned error', response.status, errorText);
+      const errorText = await putResponse.text();
+      console.warn('Traffic API: Failed to sync tool usage', putResponse.status, errorText);
     }
   } catch (e) {
-    // Log error for debugging
-    console.error('Traffic API: Failed to sync tool usage to server:', e);
-    console.error('Error details:', {
-      message: e.message,
-      toolName: toolName,
-      apiUrl: TRAFFIC_API_URL
-    });
+    console.debug('Traffic API: Failed to sync tool usage to global stats (using local only):', e.message);
   }
 }
 
