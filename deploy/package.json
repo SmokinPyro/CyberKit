@@ -1,0 +1,9 @@
+{
+  "name": "cyberkit",
+  "version": "1.0.0",
+  "description": "Browser-based cybersecurity tools",
+  "dependencies": {
+    "@netlify/blobs": "^10.3.3"
+  }
+}
+
