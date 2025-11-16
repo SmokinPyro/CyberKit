@@ -40,6 +40,8 @@ dist/
 build/
 *.min.js
 *.min.css
+*.obf.js
+*.obfuscated.js
 
 # Node modules (if you add npm packages later)
 node_modules/

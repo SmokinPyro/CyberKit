@@ -1,0 +1,3 @@
+# This file ensures the deploy folder structure is preserved in git
+# The deploy folder contains production-ready files for server upload
+

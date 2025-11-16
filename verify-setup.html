@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberKit Setup Verification</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #e5e7eb;
+    }
+    h1 { color: #22c55e; }
+    .check { color: #22c55e; }
+    .error { color: #f97373; }
+    .warning { color: #fbbf24; }
+    .info { background: #1e293b; padding: 15px; border-radius: 8px; margin: 10px 0; }
+    button {
+      background: #22c55e;
+      color: #020617;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 5px;
+    }
+    button:hover { background: #16a34a; }
+    #results { margin-top: 20px; }
+    .status { padding: 10px; margin: 5px 0; border-radius: 4px; }
+    .pass { background: rgba(34, 197, 94, 0.2); border-left: 3px solid #22c55e; }
+    .fail { background: rgba(249, 115, 115, 0.2); border-left: 3px solid #f97373; }
+  </style>
+</head>
+<body>
+  <h1>🔒 CyberKit Obfuscation Verification</h1>
+  
+  <div class="info">
+    <strong>Purpose:</strong> Verify your obfuscation setup is correct before testing.
+  </div>
+
+  <button onclick="verifySetup()">🔍 Verify Setup</button>
+  <button onclick="testObfuscation()">🧪 Test Obfuscation</button>
+  <button onclick="location.href='index.html'">🚀 Open CyberKit</button>
+
+  <div id="results"></div>
+
+  <script>
+    function verifySetup() {
+      const results = document.getElementById('results');
+      results.innerHTML = '<h2>Verification Results:</h2>';
+      
+      // Check if app.obf.js exists
+      fetch('app.obf.js')
+        .then(response => {
+          if (response.ok) {
+            addResult('✅ app.obf.js found', 'pass');
+            return response.text();
+          } else {
+            addResult('❌ app.obf.js NOT FOUND - Please create this file!', 'fail');
+            throw new Error('File not found');
+          }
+        })
+        .then(code => {
+          if (code) {
+            // Check file size
+            const size = new Blob([code]).size;
+            addResult(`📊 File size: ${(size / 1024).toFixed(2)} KB`, size > 30000 ? 'pass' : 'warning');
+            
+            // Check if code looks obfuscated
+            const isObfuscated = checkObfuscation(code);
+            if (isObfuscated) {
+              addResult('✅ Code appears obfuscated (good!)', 'pass');
+            } else {
+              addResult('⚠️ Code may not be properly obfuscated', 'warning');
+            }
+          }
+        })
+        .catch(() => {
+          addResult('❌ Cannot verify - file not accessible', 'fail');
+        });
+
+      // Check index.html
+      fetch('index.html')
+        .then(response => response.text())
+        .then(html => {
+          if (html.includes('app.obf.js')) {
+            addResult('✅ index.html references app.obf.js', 'pass');
+          } else if (html.includes('app.js')) {
+            addResult('❌ index.html still references app.js (should be app.obf.js)', 'fail');
+          } else {
+            addResult('⚠️ Cannot verify index.html script reference', 'warning');
+          }
+        });
+
+      // Check other files
+      const files = ['style.css', 'assets/images/cyberkit-logo.png'];
+      files.forEach(file => {
+        fetch(file)
+          .then(response => {
+            if (response.ok) {
+              addResult(`✅ ${file} found`, 'pass');
+            } else {
+              addResult(`❌ ${file} missing`, 'fail');
+            }
+          })
+          .catch(() => {
+            addResult(`⚠️ Cannot check ${file}`, 'warning');
+          });
+      });
+    }
+
+    function checkObfuscation(code) {
+      // Check for obfuscation indicators
+      const indicators = [
+        /_0x[a-f0-9]{4,6}/,  // Hex variable names
+        /\\x[0-9a-f]{2}/,     // Encoded strings
+        /String\.fromCharCode/, // String decoding
+        /\[['"]\w+['"]\]/,    // Array access patterns
+      ];
+      
+      let score = 0;
+      indicators.forEach(pattern => {
+        if (pattern.test(code)) score++;
+      });
+      
+      // Check if original function names are gone
+      const originalNames = ['initPasswordTool', 'initBase64Tools', 'initMatrixBackground'];
+      const hasOriginalNames = originalNames.some(name => code.includes(name));
+      
+      return score >= 2 && !hasOriginalNames;
+    }
+
+    function testObfuscation() {
+      const results = document.getElementById('results');
+      results.innerHTML = '<h2>Obfuscation Quality Test:</h2>';
+      
+      fetch('app.obf.js')
+        .then(response => response.text())
+        .then(code => {
+          // Test 1: Variable name obfuscation
+          const hasHexVars = /_0x[a-f0-9]{4,6}/.test(code);
+          addResult(hasHexVars ? '✅ Hex variable names detected' : '❌ No hex variables found', hasHexVars ? 'pass' : 'fail');
+          
+          // Test 2: String encoding
+          const hasEncodedStrings = /\\x[0-9a-f]{2}/.test(code) || /String\.fromCharCode/.test(code);
+          addResult(hasEncodedStrings ? '✅ String encoding detected' : '⚠️ Strings may not be encoded', hasEncodedStrings ? 'pass' : 'warning');
+          
+          // Test 3: Original names removed
+          const originalNames = ['initPasswordTool', 'initBase64Tools', 'utf8ToB64'];
+          const foundNames = originalNames.filter(name => code.includes(name));
+          if (foundNames.length === 0) {
+            addResult('✅ Original function names removed', 'pass');
+          } else {
+            addResult(`⚠️ Found readable names: ${foundNames.join(', ')}`, 'warning');
+          }
+          
+          // Test 4: Code complexity
+          const complexity = code.split(';').length;
+          addResult(`📊 Code complexity: ${complexity} statements`, complexity > 500 ? 'pass' : 'warning');
+          
+          // Overall assessment
+          const score = (hasHexVars ? 1 : 0) + (hasEncodedStrings ? 1 : 0) + (foundNames.length === 0 ? 1 : 0);
+          if (score === 3) {
+            addResult('🎉 EXCELLENT: Code is well obfuscated!', 'pass');
+          } else if (score >= 2) {
+            addResult('✅ GOOD: Code is obfuscated (could be stronger)', 'pass');
+          } else {
+            addResult('⚠️ WEAK: Consider re-obfuscating with stronger settings', 'warning');
+          }
+        })
+        .catch(() => {
+          addResult('❌ Cannot test - app.obf.js not found', 'fail');
+        });
+    }
+
+    function addResult(message, type) {
+      const results = document.getElementById('results');
+      const div = document.createElement('div');
+      div.className = `status ${type}`;
+      div.textContent = message;
+      results.appendChild(div);
+    }
+  </script>
+</body>
+</html>
+

@@ -1,19 +1,47 @@
+/**
+ * CyberKit - Browser-based Cybersecurity Tools
+ * 
+ * Tool initialization order (matches HTML structure):
+ * 1. Core utilities (year, matrix background, helpers)
+ * 2. Generators (password, token)
+ * 3. Encoders (Base64, Base64URL, Base32, URL)
+ * 4. Hashes (SHA-256, Multi-hash & HMAC)
+ * 5. Converters (Hex, Time)
+ * 6. Network tools (Client Info, IP Lookup, CIDR Calculator)
+ * 7. Crypto tools (Cipher, JWT)
+ */
+
 document.addEventListener("DOMContentLoaded", () => {
+  // Core utilities
   initYear();
   initMatrixBackground();
   initHelpers();
+  
+  // Generators
   initPasswordTool();
+  initTokenTool();
+  
+  // Encoders
   initBase64Tools();
   initBase32Tool();
-  initSha256Tool();
-  initHexTool();
   initUrlTool();
+  
+  // Hashes
+  initSha256Tool();
+  initMultiHashTool();
+  
+  // Converters
+  initHexTool();
+  initTimeTool();
+  
+  // Network tools
   initClientInfoTool();
   initIpLookupTool();
-  initTimeTool();
+  initCidrTool();
+  
+  // Crypto tools
   initCipherTool();
   initJwtTool();
-  initTokenTool();
 });
 
 /* ---------- Footer year ---------- */
@@ -141,6 +169,15 @@ function initHelpers() {
     const arr = Array.from(new Uint8Array(hashBuf));
     return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
   };
+
+  // Helper to convert ArrayBuffer to hex string
+  const bufferToHex = (buffer) => {
+    const arr = Array.from(new Uint8Array(buffer));
+    return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
+  };
+  
+  // Make bufferToHex available globally for multi-hash tool
+  window.bufferToHex = bufferToHex;
 
   randomBytes = (len) => {
     const arr = new Uint8Array(len);
@@ -854,4 +891,400 @@ function initTokenTool() {
       msg.textContent = "Token copied.";
     });
   });
+}
+
+/* ---------- MD5 Implementation ---------- */
+
+function md5(str) {
+  // MD5 implementation (plain JS, no dependencies)
+  function md5cycle(x, k) {
+    let a = x[0], b = x[1], c = x[2], d = x[3];
+
+    a = ff(a, b, c, d, k[0], 7, -680876936);
+    d = ff(d, a, b, c, k[1], 12, -389564586);
+    c = ff(c, d, a, b, k[2], 17, 606105819);
+    b = ff(b, c, d, a, k[3], 22, -1044525330);
+    a = ff(a, b, c, d, k[4], 7, -176418897);
+    d = ff(d, a, b, c, k[5], 12, 1200080426);
+    c = ff(c, d, a, b, k[6], 17, -1473231341);
+    b = ff(b, c, d, a, k[7], 22, -45705983);
+    a = ff(a, b, c, d, k[8], 7, 1770035416);
+    d = ff(d, a, b, c, k[9], 12, -1958414417);
+    c = ff(c, d, a, b, k[10], 17, -42063);
+    b = ff(b, c, d, a, k[11], 22, -1990404162);
+    a = ff(a, b, c, d, k[12], 7, 1804603682);
+    d = ff(d, a, b, c, k[13], 12, -40341101);
+    c = ff(c, d, a, b, k[14], 17, -1502002290);
+    b = ff(b, c, d, a, k[15], 22, 1236535329);
+
+    a = gg(a, b, c, d, k[1], 5, -165796510);
+    d = gg(d, a, b, c, k[6], 9, -1069501632);
+    c = gg(c, d, a, b, k[11], 14, 643717713);
+    b = gg(b, c, d, a, k[0], 20, -373897302);
+    a = gg(a, b, c, d, k[5], 5, -701558691);
+    d = gg(d, a, b, c, k[10], 9, 38016083);
+    c = gg(c, d, a, b, k[15], 14, -660478335);
+    b = gg(b, c, d, a, k[4], 20, -405537848);
+    a = gg(a, b, c, d, k[9], 5, 568446438);
+    d = gg(d, a, b, c, k[14], 9, -1019803690);
+    c = gg(c, d, a, b, k[3], 14, -187363961);
+    b = gg(b, c, d, a, k[8], 20, 1163531501);
+    a = gg(a, b, c, d, k[13], 5, -1444681467);
+    d = gg(d, a, b, c, k[2], 9, -51403784);
+    c = gg(c, d, a, b, k[7], 14, 1735328473);
+    b = gg(b, c, d, a, k[12], 20, -1926607734);
+
+    a = hh(a, b, c, d, k[5], 4, -378558);
+    d = hh(d, a, b, c, k[8], 11, -2022574463);
+    c = hh(c, d, a, b, k[11], 16, 1839030562);
+    b = hh(b, c, d, a, k[14], 23, -35309556);
+    a = hh(a, b, c, d, k[1], 4, -1530992060);
+    d = hh(d, a, b, c, k[4], 11, 1272893353);
+    c = hh(c, d, a, b, k[7], 16, -155497632);
+    b = hh(b, c, d, a, k[10], 23, -1094730640);
+    a = hh(a, b, c, d, k[13], 4, 681279174);
+    d = hh(d, a, b, c, k[0], 11, -358537222);
+    c = hh(c, d, a, b, k[3], 16, -722521979);
+    b = hh(b, c, d, a, k[6], 23, 76029189);
+    a = hh(a, b, c, d, k[9], 4, -640364487);
+    d = hh(d, a, b, c, k[12], 11, -421815835);
+    c = hh(c, d, a, b, k[15], 16, 530742520);
+    b = hh(b, c, d, a, k[2], 23, -995338651);
+
+    a = ii(a, b, c, d, k[0], 6, -198630844);
+    d = ii(d, a, b, c, k[7], 10, 1126891415);
+    c = ii(c, d, a, b, k[14], 15, -1416354905);
+    b = ii(b, c, d, a, k[5], 21, -57434055);
+    a = ii(a, b, c, d, k[12], 6, 1700485571);
+    d = ii(d, a, b, c, k[3], 10, -1894986606);
+    c = ii(c, d, a, b, k[10], 15, -1051523);
+    b = ii(b, c, d, a, k[1], 21, -2054922799);
+    a = ii(a, b, c, d, k[8], 6, 1873313359);
+    d = ii(d, a, b, c, k[15], 10, -30611744);
+    c = ii(c, d, a, b, k[6], 15, -1560198380);
+    b = ii(b, c, d, a, k[13], 21, 1309151649);
+    a = ii(a, b, c, d, k[4], 6, -145523070);
+    d = ii(d, a, b, c, k[11], 10, -1120210379);
+    c = ii(c, d, a, b, k[2], 15, 718787259);
+    b = ii(b, c, d, a, k[9], 21, -343485551);
+
+    x[0] = add32(a, x[0]);
+    x[1] = add32(b, x[1]);
+    x[2] = add32(c, x[2]);
+    x[3] = add32(d, x[3]);
+  }
+
+  function cmn(q, a, b, x, s, t) {
+    a = add32(add32(a, q), add32(x, t));
+    return add32((a << s) | (a >>> (32 - s)), b);
+  }
+
+  function ff(a, b, c, d, x, s, t) {
+    return cmn((b & c) | ((~b) & d), a, b, x, s, t);
+  }
+
+  function gg(a, b, c, d, x, s, t) {
+    return cmn((b & d) | (c & (~d)), a, b, x, s, t);
+  }
+
+  function hh(a, b, c, d, x, s, t) {
+    return cmn(b ^ c ^ d, a, b, x, s, t);
+  }
+
+  function ii(a, b, c, d, x, s, t) {
+    return cmn(c ^ (b | (~d)), a, b, x, s, t);
+  }
+
+  function add32(a, b) {
+    return (a + b) & 0xFFFFFFFF;
+  }
+
+  function rhex(n) {
+    let s = "", j = 0;
+    for (; j < 4; j++)
+      s += hex_chr[(n >> (j * 8 + 4)) & 0x0F] + hex_chr[(n >> (j * 8)) & 0x0F];
+    return s;
+  }
+
+  const hex_chr = "0123456789abcdef".split("");
+
+  function md51(s) {
+    const n = s.length * 8;
+    s += "\x80";
+    while (s.length % 64 !== 56) s += "\x00";
+    s += String.fromCharCode((n >> 0) & 0xFF);
+    s += String.fromCharCode((n >> 8) & 0xFF);
+    s += String.fromCharCode((n >> 16) & 0xFF);
+    s += String.fromCharCode((n >> 24) & 0xFF);
+    s += String.fromCharCode((n >> 32) & 0xFF);
+    s += String.fromCharCode((n >> 40) & 0xFF);
+    s += String.fromCharCode((n >> 48) & 0xFF);
+    s += String.fromCharCode((n >> 56) & 0xFF);
+
+    const x = [];
+    for (let i = 0; i < s.length; i += 4) {
+      x[i >> 2] = s.charCodeAt(i) | (s.charCodeAt(i + 1) << 8) | (s.charCodeAt(i + 2) << 16) | (s.charCodeAt(i + 3) << 24);
+    }
+
+    const h = [1732584193, -271733879, -1732584194, 271733878];
+    for (let i = 0; i < x.length; i += 16) {
+      const olda = h[0], oldb = h[1], oldc = h[2], oldd = h[3];
+      h[0] = olda; h[1] = oldb; h[2] = oldc; h[3] = oldd;
+      md5cycle(h, x.slice(i, i + 16));
+      h[0] = add32(h[0], olda);
+      h[1] = add32(h[1], oldb);
+      h[2] = add32(h[2], oldc);
+      h[3] = add32(h[3], oldd);
+    }
+    return h;
+  }
+
+  const h = md51(str);
+  return rhex(h[0]) + rhex(h[1]) + rhex(h[2]) + rhex(h[3]);
+}
+
+/* ---------- Multi-hash & HMAC Generator ---------- */
+
+function initMultiHashTool() {
+  const input = document.getElementById("mh-input");
+  const keyInput = document.getElementById("mh-key");
+  const generateBtn = document.getElementById("mh-generate-btn");
+  const md5Output = document.getElementById("mh-md5");
+  const sha1Output = document.getElementById("mh-sha1");
+  const sha256Output = document.getElementById("mh-sha256");
+  const sha512Output = document.getElementById("mh-sha512");
+  const hmacOutput = document.getElementById("mh-hmac");
+  const msg = document.getElementById("mh-msg");
+
+  const copyBtns = {
+    md5: document.getElementById("mh-md5-copy"),
+    sha1: document.getElementById("mh-sha1-copy"),
+    sha256: document.getElementById("mh-sha256-copy"),
+    sha512: document.getElementById("mh-sha512-copy"),
+    hmac: document.getElementById("mh-hmac-copy")
+  };
+
+  if (!input || !keyInput || !generateBtn || !md5Output || !sha1Output || 
+      !sha256Output || !sha512Output || !hmacOutput || !msg) return;
+
+  // Helper to compute hash using Web Crypto API
+  const computeHash = async (algorithm, text) => {
+    const data = new TextEncoder().encode(text);
+    const hashBuf = await crypto.subtle.digest(algorithm, data);
+    return window.bufferToHex(hashBuf);
+  };
+
+  // Helper to compute HMAC-SHA256
+  const computeHMAC = async (text, key) => {
+    const keyData = new TextEncoder().encode(key);
+    const textData = new TextEncoder().encode(text);
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const signature = await crypto.subtle.sign("HMAC", cryptoKey, textData);
+    return window.bufferToHex(signature);
+  };
+
+  generateBtn.addEventListener("click", async () => {
+    const text = input.value || "";
+    if (!text) {
+      msg.textContent = "Enter text to hash.";
+      return;
+    }
+
+    msg.textContent = "Computing hashes…";
+    
+    try {
+      // MD5 (synchronous)
+      md5Output.value = md5(text);
+
+      // SHA-1, SHA-256, SHA-512 (async)
+      sha1Output.value = await computeHash("SHA-1", text);
+      sha256Output.value = await computeHash("SHA-256", text);
+      sha512Output.value = await computeHash("SHA-512", text);
+
+      // HMAC if key provided
+      const key = keyInput.value.trim();
+      if (key) {
+        hmacOutput.value = await computeHMAC(text, key);
+        msg.textContent = "All hashes and HMAC computed.";
+      } else {
+        hmacOutput.value = "";
+        msg.textContent = "All hashes computed. (HMAC skipped - no key provided)";
+      }
+    } catch (e) {
+      msg.textContent = "Error computing hashes: " + e.message;
+    }
+  });
+
+  // Copy handlers
+  copyBtns.md5?.addEventListener("click", () => {
+    if (!md5Output.value) return;
+    navigator.clipboard.writeText(md5Output.value).then(() => {
+      msg.textContent = "MD5 copied.";
+    });
+  });
+
+  copyBtns.sha1?.addEventListener("click", () => {
+    if (!sha1Output.value) return;
+    navigator.clipboard.writeText(sha1Output.value).then(() => {
+      msg.textContent = "SHA-1 copied.";
+    });
+  });
+
+  copyBtns.sha256?.addEventListener("click", () => {
+    if (!sha256Output.value) return;
+    navigator.clipboard.writeText(sha256Output.value).then(() => {
+      msg.textContent = "SHA-256 copied.";
+    });
+  });
+
+  copyBtns.sha512?.addEventListener("click", () => {
+    if (!sha512Output.value) return;
+    navigator.clipboard.writeText(sha512Output.value).then(() => {
+      msg.textContent = "SHA-512 copied.";
+    });
+  });
+
+  copyBtns.hmac?.addEventListener("click", () => {
+    if (!hmacOutput.value) return;
+    navigator.clipboard.writeText(hmacOutput.value).then(() => {
+      msg.textContent = "HMAC-SHA256 copied.";
+    });
+  });
+}
+
+/* ---------- Subnet / CIDR Calculator ---------- */
+
+function initCidrTool() {
+  const input = document.getElementById("cidr-input");
+  const calcBtn = document.getElementById("cidr-calc-btn");
+  const networkOut = document.getElementById("cidr-network");
+  const broadcastOut = document.getElementById("cidr-broadcast");
+  const firstHostOut = document.getElementById("cidr-first-host");
+  const lastHostOut = document.getElementById("cidr-last-host");
+  const hostsOut = document.getElementById("cidr-hosts");
+  const netmaskOut = document.getElementById("cidr-netmask");
+  const wildcardOut = document.getElementById("cidr-wildcard");
+  const msg = document.getElementById("cidr-msg");
+
+  if (!input || !calcBtn || !networkOut || !broadcastOut || !firstHostOut ||
+      !lastHostOut || !hostsOut || !netmaskOut || !wildcardOut || !msg) return;
+
+  // Helper: Parse IPv4 to integer
+  function parseIpv4ToInt(ipStr) {
+    const parts = ipStr.split(".");
+    if (parts.length !== 4) return null;
+    const octets = parts.map(p => parseInt(p, 10));
+    if (octets.some(o => isNaN(o) || o < 0 || o > 255)) return null;
+    return (octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3];
+  }
+
+  // Helper: Integer to IPv4 string
+  function intToIpv4(int) {
+    return [
+      (int >>> 24) & 0xFF,
+      (int >>> 16) & 0xFF,
+      (int >>> 8) & 0xFF,
+      int & 0xFF
+    ].join(".");
+  }
+
+  calcBtn.addEventListener("click", () => {
+    const inputStr = (input.value || "").trim();
+    if (!inputStr) {
+      msg.textContent = "Enter an IPv4 address with CIDR notation (e.g. 192.168.1.42/24).";
+      clearOutputs();
+      return;
+    }
+
+    const parts = inputStr.split("/");
+    if (parts.length !== 2) {
+      msg.textContent = "Invalid format. Expected IPv4/CIDR (e.g. 192.168.1.42/24).";
+      clearOutputs();
+      return;
+    }
+
+    const ipStr = parts[0].trim();
+    const prefixStr = parts[1].trim();
+    const prefix = parseInt(prefixStr, 10);
+
+    if (isNaN(prefix) || prefix < 0 || prefix > 32) {
+      msg.textContent = "Invalid prefix length. Must be 0-32.";
+      clearOutputs();
+      return;
+    }
+
+    const ipInt = parseIpv4ToInt(ipStr);
+    if (ipInt === null) {
+      msg.textContent = "Invalid IPv4 address. Each octet must be 0-255.";
+      clearOutputs();
+      return;
+    }
+
+    try {
+      // Calculate netmask
+      const netmaskInt = (prefix === 0) ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+      
+      // Network address
+      const networkInt = (ipInt & netmaskInt) >>> 0;
+      
+      // Broadcast address
+      const broadcastInt = (networkInt | (~netmaskInt >>> 0)) >>> 0;
+      
+      // Wildcard mask
+      const wildcardInt = (~netmaskInt) >>> 0;
+      
+      // Host count
+      let hostCount = 0;
+      let firstHost = "";
+      let lastHost = "";
+      
+      if (prefix < 31) {
+        hostCount = Math.max(0, (2 ** (32 - prefix)) - 2);
+        if (hostCount > 0) {
+          firstHost = intToIpv4((networkInt + 1) >>> 0);
+          lastHost = intToIpv4((broadcastInt - 1) >>> 0);
+        }
+      } else if (prefix === 31) {
+        // /31 networks: 2 addresses, both usable (point-to-point)
+        hostCount = 2;
+        firstHost = intToIpv4(networkInt);
+        lastHost = intToIpv4(broadcastInt);
+      } else {
+        // /32: single host
+        hostCount = 1;
+        firstHost = intToIpv4(networkInt);
+        lastHost = intToIpv4(networkInt);
+      }
+
+      // Fill outputs
+      networkOut.value = intToIpv4(networkInt);
+      broadcastOut.value = intToIpv4(broadcastInt);
+      firstHostOut.value = firstHost;
+      lastHostOut.value = lastHost;
+      hostsOut.value = hostCount.toString();
+      netmaskOut.value = intToIpv4(netmaskInt);
+      wildcardOut.value = intToIpv4(wildcardInt);
+
+      msg.textContent = `Calculated /${prefix} subnet for ${ipStr}.`;
+    } catch (e) {
+      msg.textContent = "Error calculating subnet: " + e.message;
+      clearOutputs();
+    }
+  });
+
+  function clearOutputs() {
+    networkOut.value = "";
+    broadcastOut.value = "";
+    firstHostOut.value = "";
+    lastHostOut.value = "";
+    hostsOut.value = "";
+    netmaskOut.value = "";
+    wildcardOut.value = "";
+  }
 }
