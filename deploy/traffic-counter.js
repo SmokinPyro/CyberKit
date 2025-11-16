@@ -7,7 +7,8 @@
 // Server API endpoint (set to null to disable server sync)
 // For Netlify: use '/.netlify/functions/traffic-api'
 // For PHP server: use './traffic-api.php'
-const TRAFFIC_API_URL = '/.netlify/functions/traffic-api'; // Netlify Functions endpoint
+// For GitHub Pages: use null (no server-side support)
+const TRAFFIC_API_URL = null; // GitHub Pages - using localStorage only
 
 // Traffic counter data structure
 let trafficData = {
