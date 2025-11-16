@@ -17,6 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
   initMatrixBackground();
   initHelpers();
   
+  // Traffic counter (initialize early)
+  if (typeof initTrafficCounter === 'function') {
+    initTrafficCounter();
+  }
+  
   // Generators
   initPasswordTool();
   initTokenTool();
