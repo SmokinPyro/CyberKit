@@ -44,7 +44,18 @@ dist/
 build/
 *.min.js
 *.min.css
-# Allow obfuscated files in deploy folder
+
+# Source files - KEEP LOCAL ONLY, DO NOT COMMIT
+app.js
+index.html
+style.css
+traffic-counter.js
+assets/
+obfuscate-*.js
+*.bat
+*.ps1
+
+# Allow obfuscated files ONLY in deploy folder
 app.obf.js
 *.obfuscated.js
 !deploy/*.obf.js
@@ -75,4 +86,16 @@ debug-traffic.html
 test-traffic-api.html
 verify-setup.html
 traffic-counter-netlify.js
+
+# Development files - KEEP LOCAL ONLY
+netlify/
+netlify.toml
+traffic-api.php
+package.json
+package-lock.json
+node_modules/
+
+# Documentation - keep local (optional, can commit if needed)
+*.md
+!deploy/README-DEPLOY.md
 
