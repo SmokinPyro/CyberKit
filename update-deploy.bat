@@ -19,21 +19,23 @@ if exist traffic-counter.js (
     copy /Y traffic-counter.js deploy\traffic-counter.js >nul
     echo ✅ Copied traffic-counter.js
 )
-if exist traffic-api.php (
-    copy /Y traffic-api.php deploy\traffic-api.php >nul
-    echo ✅ Copied traffic-api.php
-)
+REM Skip PHP file for GitHub Pages (PHP not supported)
+REM if exist traffic-api.php (
+REM     copy /Y traffic-api.php deploy\traffic-api.php >nul
+REM     echo ✅ Copied traffic-api.php
+REM )
 
-REM Copy Netlify function
-if exist netlify\functions\traffic-api.js (
-    if not exist deploy\netlify\functions mkdir deploy\netlify\functions
-    copy /Y netlify\functions\traffic-api.js deploy\netlify\functions\traffic-api.js >nul
-    echo ✅ Copied Netlify function
-)
-if exist netlify.toml (
-    copy /Y netlify.toml deploy\netlify.toml >nul
-    echo ✅ Copied netlify.toml
-)
+REM Skip Netlify files for GitHub Pages deployment
+REM (Uncomment if deploying to Netlify instead)
+REM if exist netlify\functions\traffic-api.js (
+REM     if not exist deploy\netlify\functions mkdir deploy\netlify\functions
+REM     copy /Y netlify\functions\traffic-api.js deploy\netlify\functions\traffic-api.js >nul
+REM     echo ✅ Copied Netlify function
+REM )
+REM if exist netlify.toml (
+REM     copy /Y netlify.toml deploy\netlify.toml >nul
+REM     echo ✅ Copied netlify.toml
+REM )
 
 REM Copy logo
 if exist assets\images\cyberkit-logo.png (
