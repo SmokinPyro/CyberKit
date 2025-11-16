@@ -61,3 +61,18 @@ pnpm-lock.yaml
 README.md
 **/README*.md
 
+# Temporary fix/troubleshooting documentation (cleanup files)
+*FIX*.md
+*TROUBLESHOOT*.md
+*VERIFICATION*.md
+*READY*.md
+CONTACT-ME-FIX.md
+DOUBLE-COUNTER-FIX.md
+
+# Debug/test files (keep local, don't deploy)
+check-traffic-api.php
+debug-traffic.html
+test-traffic-api.html
+verify-setup.html
+traffic-counter-netlify.js
+

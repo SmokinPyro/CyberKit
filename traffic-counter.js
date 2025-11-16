@@ -48,7 +48,16 @@ const toolNames = {
 };
 
 // Initialize traffic counter
+let trafficCounterInitialized = false;
+
 function initTrafficCounter() {
+  // Prevent double initialization
+  if (trafficCounterInitialized) {
+    console.debug('Traffic counter already initialized, skipping...');
+    return;
+  }
+  trafficCounterInitialized = true;
+  
   // Load existing data
   loadTrafficData();
   
@@ -253,6 +262,14 @@ async function syncToolUsageToServer(toolName) {
 
 // Initialize traffic widget
 function initTrafficWidget() {
+  // Check if widget already exists
+  const existingWidget = document.getElementById('traffic-widget');
+  if (existingWidget) {
+    console.debug('Traffic widget already exists, skipping creation...');
+    updateTrafficWidget(); // Just update the existing widget
+    return;
+  }
+  
   // Create widget element
   const widget = document.createElement('div');
   widget.id = 'traffic-widget';

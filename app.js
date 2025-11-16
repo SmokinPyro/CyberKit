@@ -50,6 +50,15 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Contact modal handlers
   initContactModal();
+  
+  // Attach Contact Me link handler
+  const contactLink = document.getElementById('contact-me-link');
+  if (contactLink) {
+    contactLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      showContactModal();
+    });
+  }
 });
 
 // Contact Modal Functions
@@ -69,6 +78,18 @@ function initContactModal() {
         closeContactModal();
       }
     });
+  }
+  
+  // Attach close button handler
+  const closeBtn = document.getElementById('contact-modal-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeContactModal);
+  }
+  
+  // Attach copy button handler
+  const copyBtn = document.getElementById('contact-copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', copyEmailToClipboard);
   }
 }
 

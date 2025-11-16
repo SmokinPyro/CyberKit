@@ -14,10 +14,11 @@
   ],
   "author": "",
   "license": "PROPRIETARY",
-  "devDependencies": {},
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.1"
+  },
   "optionalDependencies": {
     "javascript-obfuscator": "^4.0.2",
     "terser": "^5.24.0"
   }
 }
-

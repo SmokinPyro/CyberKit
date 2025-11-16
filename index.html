@@ -703,7 +703,7 @@
       <div class="links">
         <a href="#about">About</a>
         <a href="#security">Security note</a>
-        <a href="#" onclick="showContactModal(); return false;">Contact Me</a>
+        <a href="#" id="contact-me-link">Contact Me</a>
         <a
           href="#"
           onclick="alert('Add a proper legal disclaimer page later.'); return false;"
@@ -716,13 +716,13 @@
       <div class="contact-modal-content">
         <div class="contact-modal-header">
           <h3>Contact Me</h3>
-          <button class="contact-modal-close" onclick="closeContactModal()">&times;</button>
+          <button class="contact-modal-close" id="contact-modal-close">&times;</button>
         </div>
         <div class="contact-modal-body">
           <p class="contact-email-label">Email Address:</p>
           <div class="contact-email-container">
             <span class="contact-email" id="contact-email">karimashraf0888@gmail.com</span>
-            <button class="contact-copy-btn" onclick="copyEmailToClipboard()" title="Copy to clipboard">
+            <button class="contact-copy-btn" id="contact-copy-btn" title="Copy to clipboard">
               <span class="contact-copy-icon">📋</span>
               <span class="contact-copy-text">Copy</span>
             </button>
