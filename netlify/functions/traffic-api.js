@@ -7,9 +7,16 @@
  * Uses Netlify Blobs for persistent global storage across all users
  */
 
-const { getStore } = require('@netlify/blobs');
+const { getStore, connectLambda } = require('@netlify/blobs');
 
 exports.handler = async (event, context) => {
+  // Connect Lambda for Functions v1 compatibility
+  try {
+    connectLambda(event);
+  } catch (e) {
+    // Ignore if already connected or not needed
+    console.debug('connectLambda:', e.message);
+  }
   // Set CORS headers
   const headers = {
     'Content-Type': 'application/json',
@@ -28,29 +35,35 @@ exports.handler = async (event, context) => {
   }
 
   // Use Netlify Blobs for persistent global storage
-  // Try to get credentials from context or environment variables
-  const siteID = context.site?.id || process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
-  const token = process.env.NETLIFY_AUTH_TOKEN || process.env.NETLIFY_BLOBS_TOKEN || context.netlify?.authToken;
-  
-  if (!siteID || !token) {
-    console.error('Netlify Blobs not configured. Missing siteID or token.');
-    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('NETLIFY')));
-    // Fallback: return error or use alternative storage
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ 
-        error: 'Blobs not configured',
-        message: 'Netlify Blobs requires siteID and token. Please configure in Netlify dashboard.'
-      })
-    };
+  // After connectLambda, getStore should work with just the store name
+  let store;
+  try {
+    store = getStore('traffic-stats');
+  } catch (e) {
+    // If that fails, try with explicit credentials
+    const siteID = context.site?.id || process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
+    const token = process.env.NETLIFY_AUTH_TOKEN || process.env.NETLIFY_BLOBS_TOKEN || context.netlify?.authToken;
+    
+    if (!siteID || !token) {
+      console.error('Netlify Blobs not configured. Missing siteID or token.');
+      console.error('Error:', e.message);
+      // Fallback: return error
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Blobs not configured',
+          message: 'Netlify Blobs requires configuration. See NETLIFY-BLOBS-SETUP.md'
+        })
+      };
+    }
+    
+    store = getStore({
+      name: 'traffic-stats',
+      siteID: siteID,
+      token: token
+    });
   }
-  
-  const store = getStore({
-    name: 'traffic-stats',
-    siteID: siteID,
-    token: token
-  });
   
   // Initialize data structure
   const defaultData = {
